@@ -55,15 +55,3 @@ The read-only storage-plan command checks MTD order and UBI space policy and nev
 changes the NAND or image builder. The active layout is explicitly
 legacy-single-ubifs; activating a future layout without validating a
 new early-init boot contract is forbidden.
-
-## OpenWrt A113X research lane (not buildable)
-
-The separate `openwrt-plan` phase reports an exact upstream OpenWrt release
-and five pinned feeds alongside the missing board/SoC port gates. The current
-Alpine source/image build remains the only image producer; OpenWrt build,
-install and sysupgrade actions do not exist.
-
-    python3 -m builder.build openwrt-plan --target capsula-mini-native
-
-The generic source pins live in firmware/openwrt, with board-specific
-acceptance state under devices/capsula-mini-native/openwrt-port.json.

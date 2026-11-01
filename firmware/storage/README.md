@@ -1,4 +1,4 @@
-# OpenWrt-inspired rootfs/OverlayFS contract
+# Future UBIFS/OverlayFS storage contract (design only)
 
 Preserve the current factory physical NAND partition map, including
 the protected bootloader/reserved/TPL/misc regions and their actual
@@ -14,12 +14,12 @@ Expose identifiers through a future read-only restricted identity API.
 The live redundant env copies have conflicting ethaddr values; never
 write them or select an unverified MAC automatically.
 
-OpenWrt sysupgrade normally saves selected config state, not
-necessarily every overlay file; a larger system image may require
-rebuilding the data volume. Rootfs Data consuming available UBI
+The planned Audio Module updater must preserve selected configuration
+explicitly, not assume every overlay file survives; a larger system
+image may require rebuilding the data volume. Rootfs Data consuming available UBI
 capacity does not eliminate the need for verified external backup.
 UBI reserves for NAND bad blocks remain mandatory.
 
 No early-init migration, OverlayFS boot, full source image,
-sysupgrade port or NAND write operation is approved yet. Keep
+firmware updater or NAND write operation is approved yet. Keep
 legacy Alpine rootfs active until full hardware acceptance.
