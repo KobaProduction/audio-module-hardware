@@ -1,0 +1,155 @@
+{
+  "schema": 1,
+  "device": "capsula-mini-native",
+  "capabilities": [
+    {
+      "id": "audio.capture.pdm",
+      "kind": "audio.capture",
+      "component": "audio",
+      "support": "declared",
+      "provider": "alsa",
+      "actions": [
+        "stream"
+      ],
+      "properties": {
+        "interface": "pdm",
+        "physical_microphones": null,
+        "capture_channels": null,
+        "device_discovery": "ALSA card/PCM enumeration"
+      }
+    },
+    {
+      "id": "audio.playback.speaker",
+      "kind": "audio.playback",
+      "component": "audio",
+      "support": "declared",
+      "provider": "alsa",
+      "actions": [
+        "stream",
+        "volume",
+        "mute"
+      ],
+      "properties": {
+        "connector": "internal",
+        "physical_speakers": null,
+        "playback_channels": null,
+        "device_discovery": "ALSA card/PCM enumeration"
+      }
+    },
+    {
+      "id": "audio.playback.jack",
+      "kind": "audio.playback",
+      "component": "audio",
+      "support": "declared",
+      "provider": "alsa",
+      "actions": [
+        "stream",
+        "volume"
+      ],
+      "properties": {
+        "connector": "analog-3.5mm",
+        "physical_speakers": null,
+        "playback_channels": null,
+        "device_discovery": "ALSA jack controls/event"
+      }
+    },
+    {
+      "id": "display.front",
+      "kind": "display.segment",
+      "component": "base",
+      "support": "declared",
+      "provider": "line-display",
+      "actions": [
+        "text",
+        "brightness"
+      ],
+      "properties": {
+        "digits": 4,
+        "colon": true,
+        "segments_per_digit": 7,
+        "device_discovery": "line-display class, avoid index-based lookup"
+      }
+    },
+    {
+      "id": "input.touch",
+      "kind": "input.keys",
+      "component": "base",
+      "support": "declared",
+      "provider": "evdev",
+      "actions": [
+        "events"
+      ],
+      "properties": {
+        "technology": "capacitive",
+        "keys": 5,
+        "device_discovery": "input device by driver identity, not /dev/input/event0",
+        "linux_match": {
+          "name_equals": "Hynitron CSK05T"
+        }
+      }
+    },
+    {
+      "id": "sensor.ambient",
+      "kind": "sensor.ambient",
+      "component": "base",
+      "support": "declared",
+      "provider": "iio",
+      "actions": [
+        "read"
+      ],
+      "properties": {
+        "measurement": [
+          "illuminance"
+        ],
+        "device_discovery": "IIO device by bh1730 driver identity",
+        "linux_match": {
+          "name_equals": "bh1730"
+        }
+      }
+    },
+    {
+      "id": "light.ring",
+      "kind": "light.addressable",
+      "component": "base",
+      "support": "planned",
+      "provider": "unresolved",
+      "actions": [
+        "brightness",
+        "color",
+        "pattern"
+      ],
+      "properties": {
+        "pixels": null,
+        "note": "Original ringled program is a stripped ARM64 ELF, not an approved HAL backend"
+      }
+    },
+    {
+      "id": "network.wifi",
+      "kind": "network.wifi",
+      "component": "wifi",
+      "support": "declared",
+      "provider": "iwd",
+      "actions": [
+        "scan",
+        "connect"
+      ],
+      "properties": {
+        "device_discovery": "iwd D-Bus device enumeration, no hard-coded wlan index"
+      }
+    },
+    {
+      "id": "network.bluetooth",
+      "kind": "network.bluetooth",
+      "component": "bluetooth",
+      "support": "declared",
+      "provider": "bluez",
+      "actions": [
+        "read",
+        "events"
+      ],
+      "properties": {
+        "device_discovery": "BlueZ D-Bus adapter enumeration"
+      }
+    }
+  ]
+}

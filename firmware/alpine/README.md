@@ -19,3 +19,14 @@ USB identity and unique serial/MAC provisioning need dedicated review.
 
 The rootfs still needs full build/boot verification; do not use it to
 overwrite a working device until boot and recovery gates are satisfied.
+
+## HAL descriptor and updates
+
+Builder compiles a device's explicitly selected HAL capabilities into
+/usr/share/audio-module/capabilities-v1.json in rootfs. The descriptor
+does not introduce Python into the device and is not proof that any
+runtime endpoint is operational.
+
+A future native update service can use the signed manifest/compatibility
+contracts in firmware/updates, but automatic OTA, NAND writing and
+device-side rollback remain disabled.

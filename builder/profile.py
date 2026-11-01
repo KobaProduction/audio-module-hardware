@@ -80,8 +80,8 @@ def validate_target(t: dict) -> None:
     if t["bootloader"]["mode"] != "retain-vendor":
         raise ProfileError("Unverified bootloader replacement is forbidden")
     for component, files in t["kernel"].get("runtime_firmware", {}).items():
-        if not NAME.fullmatch(component):
-            raise ProfileError("Invalid firmware component key: " + component)
+        if not re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+", component):
+            raise ProfileError("Invalid capability firmware binding: " + component)
         if not isinstance(files, list):
             raise ProfileError("Driver firmware list must be a list")
         for filename in files:

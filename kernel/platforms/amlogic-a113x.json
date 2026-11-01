@@ -5,6 +5,56 @@
   "kernel": {
     "source": "https://github.com/comp18man/vk-capsula-mini-a113x-linux.git",
     "revision": "8d850405b091aaf217f8bb1bbdf22852f5cdb61e",
-    "branch_for_reference": "vk-mini-a113x"
+    "branch_for_reference": "vk-mini-a113x",
+    "config_features": {
+      "display.front": {
+        "capability": "display.front",
+        "symbols": {
+          "CONFIG_SEG_LED_CLASS": "y",
+          "CONFIG_LEDS_IS31FL32XX": "y"
+        }
+      },
+      "input.touch": {
+        "capability": "input.touch",
+        "symbols": {
+          "CONFIG_KEYBOARD_CSK05T": "y"
+        }
+      },
+      "sensor.ambient": {
+        "capability": "sensor.ambient",
+        "symbols": {
+          "CONFIG_BH1730": "y"
+        }
+      },
+      "audio.capture.pdm": {
+        "capability": "audio.capture.pdm",
+        "symbols": {
+          "CONFIG_SND_MESON_AXG_PDM": "y",
+          "CONFIG_SND_SOC_DMIC": "y"
+        }
+      },
+      "audio.playback.speaker": {
+        "capability": "audio.playback.speaker",
+        "symbols": {
+          "CONFIG_SND_SOC_NTP8918": "y",
+          "CONFIG_EXTRA_FIRMWARE": {
+            "enabled": "\"eq_8918.bin\"",
+            "disabled": "\"\""
+          }
+        }
+      },
+      "network.wifi": {
+        "capability": "network.wifi",
+        "symbols": {
+          "CONFIG_W1_AML": "m"
+        }
+      },
+      "network.bluetooth": {
+        "capability": "network.bluetooth",
+        "symbols": {
+          "CONFIG_BT_HCIUART_AML": "y"
+        }
+      }
+    }
   }
 }

@@ -19,3 +19,10 @@ not be committed without license clearance. It can be retrieved separately
 by the user from the documented Khadas/OSMC distributions after
 checksum verification. NAND dumping is read-only; flashing requires
 a validated backup, target partition policy and a tested recovery path.
+
+## Diagnostics
+
+tools/diagnostics contains an opt-in read-only client of the shared
+HAL manifest/status contract. It is not installed by default and
+does not replace native platform drivers. The Builder currently omits
+the optional diagnostics Alpine package group for Capsula Mini.

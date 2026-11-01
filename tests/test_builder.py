@@ -194,6 +194,9 @@ class BuildTests(unittest.TestCase):
             data = json.loads((images / "manifest.json").read_text())
             self.assertEqual(data["status"], "NOT_HARDWARE_VALIDATED")
             self.assertFalse(data["application_included"])
+            self.assertFalse(data["runtime_hal_verified"])
+            self.assertEqual(data["hal_abi_major"], 1)
+            self.assertNotIn("light.ring", data["capabilities_declared"])
             self.assertEqual(data["artifacts"]["Image"]["sha256"],
                              hashlib.sha256((images / "Image").read_bytes()).hexdigest())
 
@@ -218,7 +221,7 @@ class BuildTests(unittest.TestCase):
     def test_firmware_blob_traversal_rejected(self) -> None:
         import copy
         p = copy.deepcopy(self.profile)
-        p["kernel"]["runtime_firmware"]["audio"] = ["../user-keys"]
+        p["kernel"]["runtime_firmware"]["audio.playback.speaker"] = ["../user-keys"]
         with self.assertRaisesRegex(ProfileError, "Unsafe runtime firmware"):
             validate_target(p)
 

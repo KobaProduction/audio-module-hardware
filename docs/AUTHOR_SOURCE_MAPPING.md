@@ -88,3 +88,12 @@ Next steps:
 - Port device diagnostics into Builder, with capability discovery and tests.
 - Reverse the ring LED and bootloader only from authorized local samples.
 - Integrate generic tool transport with validated Builder NAND profiles.
+
+## HAL migration state
+
+The contract for physical microphone/speaker counts, pixel vs segment
+displays and detachable outputs is now documented under
+docs/HAL_CONTRACT.md. Actual native Linux HAL adapters have NOT yet
+been ported. The original ringled remains a private behavioral sample,
+not a mandatory firmware asset. Builder excludes unimplemented ring
+functions from the exported capability set.
