@@ -7,9 +7,15 @@ its DTS/defconfig filenames and the Amlogic DTS Makefile target.
 diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
 --- a/arch/arm64/boot/dts/amlogic/Makefile
 +++ b/arch/arm64/boot/dts/amlogic/Makefile
-@@ -17 +17 @@
+@@ -14,7 +14,7 @@
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-2.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-jethome-jethub-j110-rev-3.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-axg-s400.dtb
 -dtb-$(CONFIG_ARCH_MESON) += meson-axg-s420-marusia-mini.dtb
 +dtb-$(CONFIG_ARCH_MESON) += meson-axg-capsula-mini.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-g12a-fbx8am-brcm.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-g12a-fbx8am-realtek.dtb
+ dtb-$(CONFIG_ARCH_MESON) += meson-g12a-radxa-zero.dtb
 diff --git a/arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts b/arch/arm64/boot/dts/amlogic/meson-axg-capsula-mini.dts
 similarity index 100%
 rename from arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts

@@ -73,10 +73,21 @@ def _patch_records(patches: list[str], *, root: Path = ROOT) -> list[dict]:
 
 def apply_source_patches(src: Path, patches: list[str], *, root: Path = ROOT) -> None:
     """Apply ordered, reviewed kernel-local patches. No device or NAND access."""
+    # Source workdir may be nested inside our Hardware Git checkout. Without
+    # a ceiling, git apply can silently SKIP every patch due to prefix rules.
+    # Let a kernel-local .git be discovered, but never its parent repository.
+    env = os.environ.copy()
+    env["GIT_CEILING_DIRECTORIES"] = str(src.resolve().parent)
     for record in _patch_records(patches, root=root):
         patch = root / record["path"]
-        subprocess.run(["git", "apply", "--check", str(patch)], cwd=src, check=True)
-        subprocess.run(["git", "apply", str(patch)], cwd=src, check=True)
+        subprocess.run(["git", "apply", "--check", str(patch)],
+                       cwd=src, env=env, check=True)
+        subprocess.run(["git", "apply", str(patch)],
+                       cwd=src, env=env, check=True)
+        # A skipped patch can exit zero; the reverse preflight proves that
+        # each change actually appeared in this exact kernel source tree.
+        subprocess.run(["git", "apply", "--reverse", "--check", str(patch)],
+                       cwd=src, env=env, check=True)
 
 
 def _write_patched_stamp(src: Path, revision: str, archive_sha256: str,
