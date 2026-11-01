@@ -42,6 +42,8 @@ def _source_paths(target: dict, root: Path) -> list[Path]:
         f"builder/devices/{device}/capabilities.json",
         f"builder/devices/{device}/persistence.json",
     )]
+    for patch in target["kernel"].get("patches", []):
+        files.append(root / patch)
     for overlay in (
         root / "firmware/alpine/overlay",
         root / "builder/devices" / device / "overlay",

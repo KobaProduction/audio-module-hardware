@@ -27,15 +27,18 @@ read-only), rootfs_data (UBIFS writable OverlayFS), identity (existing protected
 Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
 Do not treat the candidate as a tested production partition map.
 
-## Original kernel Device Tree name
+## Board-specific DTS and defconfig names
 
-The pinned upstream A113X repository calls its source DTS
-`meson-axg-s420-marusia-mini.dts` and its DTB accordingly. That historical
-*filename* is not our public device identity: the DTS itself declares
-`model = "VK Capsula Mini (Amlogic A113X)"` and
+The pinned upstream A113X kernel still contains its historical
+`meson-axg-s420-marusia-mini.dts` and `marusia_mini_defconfig` filenames.
+The Builder applies a small, source-controlled kernel patch that **renames
+only the files and Makefile target** to `meson-axg-capsula-mini.dts` and
+`capsula_mini_defconfig`. The Device Tree properties remain byte-for-byte
+unchanged, including `model = "VK Capsula Mini (Amlogic A113X)"` and
 `compatible = "vk,capsula-mini", "amlogic,a113d", "amlogic,meson-axg"`.
-Our Builder selects that exact upstream DTB without rewriting kernel sources
-and emits the image artifact as `board.dtb`. A future reviewed in-tree
-DTS rename can use `meson-axg-capsula-mini.dts` (without altering the
-actual U-Boot-compatible DT layout), but renaming the existing upstream
-file or `compatible` now would need additional hardware acceptance.
+
+`meson`/`axg` identify the Amlogic Linux SoC family and correctly remain in
+the source filenames; `s420` comes from an upstream reference board and is
+not part of our Capsula Mini board name. The final release still exposes
+`board.dtb` to the image/boot contract. The patch is applied after verifying
+the pinned upstream archive and its resulting source tree is attested.

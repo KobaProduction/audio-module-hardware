@@ -60,6 +60,13 @@ def validate_target(t: dict) -> None:
         raise ProfileError("Kernel source must be a GitHub HTTPS repository")
     if "archive_sha256" in kernel and not re.fullmatch(r"[0-9a-f]{64}", kernel["archive_sha256"]):
         raise ProfileError("Kernel source archive SHA256 must be pinned")
+    patches = kernel.get("patches", [])
+    if (not isinstance(patches, list)
+            or any(not isinstance(patch, str)
+                   or not re.fullmatch(r"kernel/patches/" + t["soc"] + r"/[a-z0-9-]+\.patch", patch)
+                   for patch in patches)
+            or len(set(patches)) != len(patches)):
+        raise ProfileError("Invalid pinned kernel patch list")
     if "/" in kernel["defconfig"] or kernel["defconfig"].startswith("."):
         raise ProfileError("Unsafe kernel defconfig")
     if not re.fullmatch(r"[a-z0-9_/-]+\.dtb", kernel["dtb"]):

@@ -56,6 +56,9 @@
         }
       }
     },
-    "archive_sha256": "336ddcd6861cef8f111e816218eb04ced9b204cec4380ebd70e06c521809e9db"
+    "archive_sha256": "336ddcd6861cef8f111e816218eb04ced9b204cec4380ebd70e06c521809e9db",
+    "patches": [
+      "kernel/patches/amlogic-a113x/0001-capsula-mini-board-names.patch"
+    ]
   }
 }

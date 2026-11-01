@@ -38,3 +38,15 @@ If GitHub ever repackages the archive and changes its compressed SHA256,
 source retrieval fails closed until the new archive is verified against the
 same Git commit and the source pin is intentionally updated. No Linux/Alpine
 version changes are implied.
+
+## Source-controlled board patches
+
+The SoC manifest declares an ordered set of kernel source patches. The
+Builder applies them after SHA256-verifying the pinned upstream archive,
+then fingerprints and re-verifies the **patched** source tree. This keeps
+upstream attribution while permitting clear Koba board filenames and future
+kernel-only fixes. The patch for Capsula Mini changes only the DTS/defconfig
+filenames and the DTS Makefile target; physical DT properties are unchanged.
+The original vendor `meson-axg-s420-marusia-mini.dts` and
+`marusia_mini_defconfig` are still available in upstream history; our built
+files are `meson-axg-capsula-mini.dtb` and `capsula_mini_defconfig`.
