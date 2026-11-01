@@ -4,6 +4,9 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
+from contextlib import nullcontext
+from unittest.mock import patch
 import sys
 import tempfile
 import unittest
@@ -117,8 +120,12 @@ class BuildTests(unittest.TestCase):
             root.mkdir()
             public = Path(td) / "test.pub"
             public.write_text("ssh-ed25519 " + "a" * 50 + " test-only\n")
-            build.apply_overlay(self.profile, root, public)
-            self.assertEqual((root / "root/.ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
+            links = patch.object(Path, "symlink_to") if os.name == "nt" else nullcontext()
+            with links:
+                build.apply_overlay(self.profile, root, public)
+            if os.name != "nt":
+                self.assertEqual((root / "root/.ssh/authorized_keys").stat().st_mode & 0o777, 0o600)
+            self.assertTrue((root / "root/.ssh/authorized_keys").is_file())
 
     def test_manifest_from_synthetic_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as td:
