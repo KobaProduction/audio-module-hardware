@@ -19,3 +19,12 @@ dist/
 .tmp/
 .DS_Store
 Thumbs.db
+
+# Source/build staging may contain massive kernels, keys or NAND artifacts
+.work/
+.working/
+artifacts/
+*.ubifs
+*.ubi
+*.cpio
+*.tar.gz

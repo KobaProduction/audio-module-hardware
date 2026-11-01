@@ -1,13 +1,23 @@
 # AGENTS.md
 
-Read README.md completely before working in this repository.
+Read README.md, then docs/ARCHITECTURE.md completely before work.
 
-Project: Koba Audio Module ? Hardware.
-Owner: Linux, kernel, device trees, board variants, firmware build targets,
-flashing, backup and recovery utilities.
-VK Capsula Mini is one target, not a platform restriction.
-Never commit device-specific backups or secrets.
+Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
+U-Boot policy, source-based Alpine image creation, target profiles, and
+eventually transport/backup/recovery tooling.
 
-Use relevant task skills from https://github.com/ArthurKoba/ai-agent-workflow.
-Technology and build layouts remain undecided: obtain architecture approval
-before implementation.
+Current first supported profile is capsula-mini-native on Amlogic A113X.
+main contains shared sources and device-profile data, NOT unrelated device
+fork branches. Do not incorporate unique device secrets, factory dumps,
+closed vendor binaries or unlicensed blobs into Git.
+
+Full source build is NOT hardware acceptance. Preserve the factory
+bootloader and lower 0x01200000 of NAND; no flasher/erase step is
+part of the initial builder. Never call a generated image flash-ready
+without reproducible tests and a validated recovery path.
+
+Future repository extraction follows OpenIPC-style independent component
+ownership while preserving pinned source and image contracts.
+
+Use relevant skills and Git workflow from:
+https://github.com/ArthurKoba/ai-agent-workflow

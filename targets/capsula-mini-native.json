@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "id": "capsula-mini-native",
+  "board": "capsula-mini",
+  "variant": "native",
+  "soc": "amlogic-a113x",
+  "architecture": "aarch64",
+  "kernel": {
+    "source": "https://github.com/comp18man/vk-capsula-mini-a113x-linux.git",
+    "revision": "8d850405b091aaf217f8bb1bbdf22852f5cdb61e",
+    "branch_for_reference": "vk-mini-a113x",
+    "defconfig": "marusia_mini_defconfig",
+    "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb"
+  },
+  "os": {
+    "distribution": "alpine",
+    "release": "3.24.1",
+    "architecture": "aarch64"
+  },
+  "nand": {
+    "total_bytes": 268435456,
+    "erase_block_bytes": 131072,
+    "page_bytes": 2048,
+    "subpage_bytes": 2048,
+    "ubi_leb_bytes": 126976,
+    "rootfs_max_lebs": 1652,
+    "protected_until": 18874368,
+    "kernel_offset": 18874368,
+    "dtb_offset": 45088768,
+    "ubi_offset": 46137344,
+    "end_offset": 268435456
+  },
+  "bootloader": {
+    "mode": "retain-vendor",
+    "bootdelay_seconds": 1
+  },
+  "application": {
+    "enabled": false,
+    "reason": "audio-module-application has not been implemented yet"
+  },
+  "status": "experimental-build-unverified"
+}

@@ -1,32 +1,23 @@
 #!/usr/bin/env sh
 set -eu
-
 cd "$(git rev-parse --show-toplevel)"
-
-for required in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml; do
-    if [ ! -s "$required" ]; then
-        echo "ERROR: missing or empty repository bootstrap file: $required" >&2
-        exit 1
-    fi
+for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md scripts/build.py builder/profile.py; do
+    test -s "$f" || { echo "Missing expected bootstrap: $f" >&2; exit 1; }
 done
-
-# Verify the complete repository tree, including the initial root commit.
 empty_tree="$(git hash-object -t tree /dev/null)"
 git diff --check "$empty_tree" HEAD
 git diff --check --cached
-
-# Prevent committing private device data or authentication material.
-git ls-files | while IFS= read -r path; do
+# Reject secret / device-dump paths even if someone force-adds them.
+git ls-files --cached --others --exclude-standard | while IFS= read -r path; do
     case "$path" in
-        *.pem|*.key|*.ppk|*.raw.bin|*/backups/*|backups/*|*/device-dumps/*|device-dumps/*|*/.env|.env)
-            echo "ERROR: sensitive file is tracked: $path" >&2
-            exit 1
-            ;;
-        *.py|*.ts|*.tsx|*.c|*.cc|*.cpp|*.h|*.hpp|*.rs|*.go|*.dts|*.dtsi)
-            echo "ERROR: source present but language toolchain verification is not configured: $path" >&2
-            exit 1
-            ;;
+       *.pem|*.key|*.ppk|*.raw.bin|*/backups/*|backups/*|*/device-dumps/*|device-dumps/*|*/.env|.env)
+           echo "Private artifact cannot be tracked: $path" >&2; exit 1 ;;
     esac
 done
-
-echo "Bootstrap verification passed (docs-only)."
+python3 -m compileall -q builder scripts tests
+python3 -m unittest discover -s tests -v
+python3 scripts/build.py plan >/dev/null
+sh -n scripts/verify.sh
+sh -n .githooks/pre-push
+sh -n targets/capsula-mini-native/overlay/etc/init.d/usbgadget
+echo "Hardware source and profile verification passed."

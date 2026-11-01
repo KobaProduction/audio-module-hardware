@@ -1,0 +1,30 @@
+# Functional packages based on a read-only inventory of Alpine 3.24.1.
+# APK versions need lock before byte-reproducible release claims.
+alpine-base
+alsa-utils
+bash
+bluez
+bluez-alsa
+bluez-alsa-openrc
+bluez-openrc
+busybox
+ca-certificates
+chrony
+dbus
+dnsmasq
+ethtool
+evtest
+i2c-tools
+ifupdown-ng
+iproute2
+iputils
+iw
+iwd
+kmod
+libgpiod
+mtd-utils-ubi
+openssh
+shadow
+usbutils
+wireless-regdb
+zram-init
