@@ -70,7 +70,9 @@ The current Capsula Mini has a single writable UBIFS rootfs and does not
 preserve settings across whole-UBI replacement. Builder now has a
 capacity-checked design-only profile for a read-only UBIFS system root,
 UBIFS rootfs_data with an OverlayFS writable upper/work, and a separate
-identity UBI volume. The existing firmware build remains legacy-only.
+physical identity MTD partition before kernel. The system update design
+retains RootFS Data to the remaining UBI capacity, while the active
+firmware build remains legacy-only.
 
 This follows the OpenIPC NAND architecture (which need not use SquashFS),
 while leaving SquashFS-on-ubiblock as a research-only future provider.

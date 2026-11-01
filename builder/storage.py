@@ -1,7 +1,8 @@
-"""Read-only NAND/UBI layout planner. It never creates volumes or writes flash.
+"""Read-only physical NAND and logical UBI layout planner.
 
-The active Capsula Mini image is the legacy single writable UBIFS volume.
-The new OpenIPC-inspired split is only a capacity-checked DESIGN candidate.
+Physical MTD partitions have fixed, ordered offsets. UBI volumes are logical
+and wear-levelled: their IDs do NOT denote physical offsets or ordering.
+Nothing here formats partitions, creates UBI volumes, or updates bootargs.
 """
 from __future__ import annotations
 
@@ -11,10 +12,18 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
-TRUE_FLAGS = ("boot_pivot_verified", "initial_provisioning_implemented",
-              "volume_migration_implemented", "update_rootfs_only_implemented",
-              "recovery_validated")
+FLAG_KEYS = (
+    "bootloader_relocation_verified", "kernel_dtb_offsets_verified",
+    "identity_format_provisioning_implemented", "early_init_implemented",
+    "boot_pivot_verified", "volume_migration_implemented",
+    "update_rootfs_only_implemented", "recovery_validated",
+)
+BOOT_CHAIN = ("bootloader", "reserved", "tpl", "misc")
+ORDER = BOOT_CHAIN + ("identity", "kernel", "dtb", "ubi")
+ROLES = (
+    "boot-chain", "factory-reserved", "boot-chain", "boot-chain",
+    "device-identity", "kernel", "kernel-description", "system-and-data",
+)
 
 
 class StoragePlanError(ValueError):
@@ -22,14 +31,23 @@ class StoragePlanError(ValueError):
 
 
 @dataclass(frozen=True)
-class VolumePlan:
+class PhysicalPartition:
+    name: str
+    offset_bytes: int
+    size_bytes: int
+    role: str
+    preserve_always: bool
+
+
+@dataclass(frozen=True)
+class UBIVolume:
     name: str
     volume_id: int
     role: str
     filesystem: str
-    lebs: int
-    capacity_bytes: int
-    read_only: bool
+    allocation: str
+    max_lebs: int | None
+    min_lebs: int | None
     preserve_on_update: bool
     preserve_on_clean: bool
 
@@ -37,21 +55,23 @@ class VolumePlan:
 @dataclass(frozen=True)
 class StoragePlan:
     device: str
-    mode: str
+    status: str
+    current_layout: str
     current_boot_root: str
     candidate_boot_root: str
-    lower_filesystem: str
+    physical_partitions: tuple[PhysicalPartition, ...]
+    ubi_partition_bytes: int
+    nominal_ubi_pebs: int
+    ubi_volumes: tuple[UBIVolume, ...]
+    rootfs_max_lebs: int
+    rootfs_data_autoresize_to_end: bool
+    rootfs_data_exact_lebs: None
+    fixed_unused_tail_lebs: int
+    identity_storage_format: str
     overlay_filesystem: str
-    data_filesystem: str
-    current_rootfs_lebs: int
-    budget_lebs: int
-    allocated_lebs: int
-    unallocated_lebs: int
-    leb_bytes: int
-    volumes: tuple[VolumePlan, ...]
+    alternative_squashfs_status: str
     may_install: bool
     may_switch_boot: bool
-    alternative_squashfs_status: str
     blockers: tuple[str, ...]
 
     def to_dict(self) -> dict:
@@ -63,135 +83,186 @@ def load_storage_layout(target: dict) -> dict:
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,63}", device):
         raise StoragePlanError("Invalid device path")
     path = ROOT / "builder" / "devices" / device / "storage.json"
-    document = json.loads(path.read_text(encoding="utf-8"))
-    return document
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _validate_physical_partitions(target: dict, proposal: dict) -> tuple[PhysicalPartition, ...]:
+    parts = proposal.get("physical_partitions")
+    if (proposal.get("physical_partition_policy") != "explicit-mtd"
+            or not isinstance(parts, list) or len(parts) != len(ORDER)
+            or [p.get("name") for p in parts if isinstance(p, dict)] != list(ORDER)):
+        raise StoragePlanError("Physical NAND order must be boot, identity, kernel, dtb, ubi")
+    nand = target["nand"]
+    erase = nand["erase_block_bytes"]
+    previous_end = 0
+    mapped: list[PhysicalPartition] = []
+    for part, name, role in zip(parts, ORDER, ROLES):
+        if not isinstance(part, dict):
+            raise StoragePlanError("Invalid physical partition")
+        offset, size = part.get("offset"), part.get("bytes")
+        if (type(offset) is not int or type(size) is not int
+                or offset != previous_end or size <= 0 or offset % erase or size % erase):
+            raise StoragePlanError("MTD ranges must be contiguous and eraseblock-aligned")
+        preserved = name in BOOT_CHAIN or name == "identity"
+        if part.get("role") != role or part.get("preserve_always") is not preserved:
+            raise StoragePlanError("Factory/identity/firmware write policy mismatch")
+        if name in BOOT_CHAIN:
+            expected_sizes = {
+                "bootloader": 2097152, "reserved": 6291456,
+                "tpl": 8388608, "misc": 2097152,
+            }
+            if size != expected_sizes[name]:
+                raise StoragePlanError("Protected original boot-chain partition changed")
+        if name == "identity":
+            if (offset != nand["protected_until"]
+                    or part.get("format") != "unselected"
+                    or part.get("provisioning_verified") is not False):
+                raise StoragePlanError("Unverified identity partition or data format")
+        if name == "kernel" and size != nand["dtb_offset"] - nand["kernel_offset"]:
+            raise StoragePlanError("Proposed kernel slot size changed")
+        if name == "dtb" and size != nand["ubi_offset"] - nand["dtb_offset"]:
+            raise StoragePlanError("Proposed DTB slot size changed")
+        previous_end = offset + size
+        mapped.append(PhysicalPartition(name, offset, size, role, preserved))
+    if previous_end != nand["total_bytes"]:
+        raise StoragePlanError("Last RootFS Data container must extend to physical NAND end")
+    if mapped[-1].offset_bytes <= nand["ubi_offset"]:
+        raise StoragePlanError("Expected relocated UBI start after new identity")
+    return tuple(mapped)
+
+
+def _validate_ubi(proposal: dict, target: dict, partition: PhysicalPartition) -> tuple[UBIVolume, ...]:
+    ubi = proposal.get("ubi")
+    if not isinstance(ubi, dict) or ubi.get("mtd_partition") != partition.name:
+        raise StoragePlanError("RootFS and RootFS Data must live in the final UBI partition")
+    volumes = ubi.get("volumes")
+    if not isinstance(volumes, list) or len(volumes) != 2:
+        raise StoragePlanError("Only rootfs and rootfs_data UBI volumes are supported")
+    lower, data = volumes
+    if not all(isinstance(v, dict) for v in volumes):
+        raise StoragePlanError("Invalid UBI volume specification")
+    if (
+        lower.get("name"), lower.get("id"), lower.get("role"),
+        lower.get("filesystem"), lower.get("allocation"),
+        lower.get("read_only_at_runtime"), lower.get("preserve_during_system_update"),
+        lower.get("preserve_during_clean_install")
+    ) != ("rootfs", 0, "immutable-system", "ubifs", "image-sized", True, False, False):
+        raise StoragePlanError("Invalid immutable system volume")
+    if (
+        data.get("name"), data.get("id"), data.get("role"),
+        data.get("filesystem"), data.get("allocation"),
+        data.get("read_only_at_runtime"), data.get("preserve_during_system_update"),
+        data.get("preserve_during_clean_install")
+    ) != ("rootfs_data", 1, "user-overlay", "ubifs", "autoresize-remainder", False, True, False):
+        raise StoragePlanError("RootFS Data must autoresize to the UBI remainder")
+    root_limit, data_min = lower.get("max_lebs"), data.get("min_lebs")
+    if (type(root_limit) is not int or type(data_min) is not int
+            or root_limit <= 0 or data_min < 32):
+        raise StoragePlanError("Invalid proposed root/data LEB bounds")
+    if data.get("max_lebs") is not None or lower.get("min_lebs") is not None:
+        raise StoragePlanError("RootFS Data must NOT have a fixed maximum")
+    if (ubi.get("additional_fixed_tail_reserve_lebs") != 0
+            or ubi.get("ubi_internal_bad_block_reserves") != "managed-by-ubi"):
+        raise StoragePlanError("No artificial fixed tail reserve; leave UBI internal reserves intact")
+    nominal_pebs = partition.size_bytes // target["nand"]["erase_block_bytes"]
+    if root_limit + data_min + 2 >= nominal_pebs:
+        raise StoragePlanError("Volume bounds overcommit physical UBI partition")
+    # Exact usable UBI LEB capacity is device-specific (bad PEBs, EC/VID,
+    # UBI reserves). We intentionally do NOT fabricate remaining data LEBs.
+    return (
+        UBIVolume("rootfs", 0, "immutable-system", "ubifs", "image-sized",
+                  root_limit, None, False, False),
+        UBIVolume("rootfs_data", 1, "user-overlay", "ubifs",
+                  "autoresize-remainder", None, data_min, True, False),
+    )
 
 
 def plan_storage(target: dict, *, document: dict | None = None) -> StoragePlan:
-    data = load_storage_layout(target) if document is None else document
-    if not isinstance(data, dict) or data.get("schema") != 1:
-        raise StoragePlanError("Unsupported storage layout schema")
-    if data.get("device") != target["id"] or data.get("state") != "design-only":
-        raise StoragePlanError("Incorrect target or unsupported activation")
-    legacy = data["current"]
-    budget = target["nand"]["rootfs_max_lebs"]
-    if (legacy.get("layout") != "single-ubifs"
-            or legacy.get("root_volume") != "rootfs"
-            or legacy.get("volume_id") != 0
-            or legacy.get("allocated_lebs") != budget
-            or legacy.get("boot_root") != "ubi0:rootfs"
-            or legacy.get("writable_root") is not True):
-        raise StoragePlanError("Current NAND facts mismatch actual layout")
-    new = data["candidate"]
-    if (new.get("layout") != "ubi-root-overlay"
-            or new.get("kernel_boot_root") != legacy["boot_root"]
-            or new.get("base_filesystem") != "ubifs"
-            or new.get("data_filesystem") != "ubifs"
-            or new.get("overlay_filesystem") != "overlayfs"):
-        raise StoragePlanError("Unverified storage backend or boot root")
-    mounts = new["mounts"]
-    required = {"lower": "/rom", "merged": "/", "data": "/overlay",
-                "upper": "/overlay/upper", "work": "/overlay/work",
-                "identity": "/identity"}
-    if mounts != required:
-        raise StoragePlanError("Overlay mount paths must stay isolated")
-    if any(new.get(flag) is not False for flag in TRUE_FLAGS):
-        raise StoragePlanError("Boot/migration/recovery acceptance cannot be asserted")
-    if (new.get("bootloader_root_parameter_unchanged") is not True
-            or new.get("early_init_implemented") is not False
-            or new.get("required_kernel_symbols") !=
-            ["CONFIG_OVERLAY_FS=y", "CONFIG_UBIFS_FS=y", "CONFIG_MTD_UBI=y"]):
-        raise StoragePlanError("Required OverlayFS early boot/kernel gate missing")
-    vols = new["volumes"]
-    if not isinstance(vols, list) or len(vols) != 3:
-        raise StoragePlanError("Expected exactly rootfs, rootfs_data and identity")
-    required_vols = (
-        ("rootfs", 0, "immutable-system", True, False, False),
-        ("rootfs_data", 1, "user-overlay", False, True, False),
-        ("identity", 2, "device-identity", True, True, True),
-    )
-    lebs = target["nand"]["ubi_leb_bytes"]
-    if type(lebs) is not int or lebs <= 0:
-        raise StoragePlanError("Invalid target LEB geometry")
-    selected: list[VolumePlan] = []
-    for vol, required_vol in zip(vols, required_vols):
-        name, vol_id, role, is_ro, on_update, on_clean = required_vol
-        if not isinstance(vol, dict) or (
-            vol.get("name"), vol.get("id"), vol.get("role"),
-            vol.get("read_only_at_runtime"), vol.get("preserve_during_system_update"),
-            vol.get("preserve_during_clean_install"),
-        ) != (name, vol_id, role, is_ro, on_update, on_clean):
-            raise StoragePlanError("UBI volume identity or retention mismatch")
-        if not NAME.fullmatch(name) or vol.get("filesystem") != "ubifs":
-            raise StoragePlanError("Unsupported UBI filesystem")
-        size = vol.get("max_lebs")
-        if type(size) is not int or size <= 0:
-            raise StoragePlanError("Invalid UBI volume size")
-        selected.append(VolumePlan(
-            name, vol_id, role, "ubifs", size, size * lebs,
-            is_ro, on_update, on_clean,
-        ))
-    spare = new.get("safety_unallocated_lebs")
-    if type(spare) is not int or spare < 32:
-        raise StoragePlanError("Insufficient unallocated future growth budget")
-    allocated = sum(v.lebs for v in selected)
-    if allocated + spare > budget:
-        raise StoragePlanError("Proposed UBI volumes overcommit verified budget")
-    alt = data["alternative"]
+    d = load_storage_layout(target) if document is None else document
+    if (not isinstance(d, dict) or d.get("schema") != 2
+            or d.get("device") != target["id"] or d.get("state") != "design-only"):
+        raise StoragePlanError("Unsupported or activated storage design")
+    original = d["current"]
+    n = target["nand"]
+    if (original.get("layout") != "single-ubifs"
+            or original.get("mtd_layout") != list(BOOT_CHAIN + ("kernel", "dtb", "ubi"))
+            or original.get("root_volume") != "rootfs"
+            or original.get("volume_id") != 0
+            or original.get("allocated_lebs") != n["rootfs_max_lebs"]
+            or original.get("boot_root") != "ubi0:rootfs"
+            or original.get("writable_root") is not True):
+        raise StoragePlanError("Current NAND evidence does not match legacy root")
+    proposed = d["candidate"]
+    if (proposed.get("layout") != "boot-identity-kernel-rootfs-data"
+            or proposed.get("kernel_boot_root") != original["boot_root"]
+            or proposed.get("base_filesystem") != "ubifs"
+            or proposed.get("overlay_filesystem") != "overlayfs"
+            or proposed.get("data_filesystem") != "ubifs"):
+        raise StoragePlanError("Unsupported overlay backend or boot contract")
+    if any(proposed.get(k) is not False for k in FLAG_KEYS):
+        raise StoragePlanError("Bootloader, image migration or recovery is not hardware-validated")
+    if proposed.get("required_kernel_symbols") != [
+        "CONFIG_OVERLAY_FS=y", "CONFIG_UBIFS_FS=y", "CONFIG_MTD_UBI=y"
+    ]:
+        raise StoragePlanError("OverlayFS kernel requirements not set")
+    mounts = proposed.get("mounts")
+    if mounts != {
+        "lower": "/rom", "merged": "/", "data": "/overlay",
+        "upper": "/overlay/upper", "work": "/overlay/work",
+        "identity": "/identity",
+    }:
+        raise StoragePlanError("Incorrect OverlayFS mount boundaries")
+    physical = _validate_physical_partitions(target, proposed)
+    volumes = _validate_ubi(proposed, target, physical[-1])
+    alt = d["alternative"]
     if (alt.get("layout") != "squashfs-on-ubiblock"
             or alt.get("status") != "research-only"
             or alt.get("requires_new_root_boot_contract") is not True):
-        raise StoragePlanError("SquashFS alternative not boot-validated")
-    blockers = (
-        "current-rootfs-data-migration-not-implemented",
-        "early-overlay-pivot-and-linux-config-not-hardware-tested",
-        "identity-provisioning-not-validated",
-        "ubi-volume-init-and-per-volume-update-not-implemented",
-        "recovery-power-loss-rollback-not-validated",
-        "current-whole-ubi-image-would-destroy-all-proposed-volumes",
-    )
+        raise StoragePlanError("SquashFS backend is not boot-validated")
     return StoragePlan(
-        device=target["id"], mode="design-only",
-        current_boot_root=legacy["boot_root"],
-        candidate_boot_root=new["kernel_boot_root"],
-        lower_filesystem="ubifs", overlay_filesystem="overlayfs",
-        data_filesystem="ubifs", current_rootfs_lebs=budget,
-        budget_lebs=budget, allocated_lebs=allocated,
-        unallocated_lebs=budget - allocated, leb_bytes=lebs,
-        volumes=tuple(selected), may_install=False, may_switch_boot=False,
+        device=target["id"], status="design-only",
+        current_layout="single-ubifs", current_boot_root=original["boot_root"],
+        candidate_boot_root=proposed["kernel_boot_root"],
+        physical_partitions=physical,
+        ubi_partition_bytes=physical[-1].size_bytes,
+        nominal_ubi_pebs=physical[-1].size_bytes // n["erase_block_bytes"],
+        ubi_volumes=volumes,
+        rootfs_max_lebs=volumes[0].max_lebs,
+        rootfs_data_autoresize_to_end=True,
+        rootfs_data_exact_lebs=None,
+        fixed_unused_tail_lebs=0,
+        identity_storage_format="unselected",
+        overlay_filesystem="overlayfs",
         alternative_squashfs_status="research-only",
-        blockers=blockers,
+        may_install=False, may_switch_boot=False,
+        blockers=(
+            "identity-partition-is-a-proposal-not-found-on-current-device",
+            "bootloader-kernel-and-dtb-relocated-offsets-not-validated",
+            "factory-identity-source-and-format-unverified",
+            "rootfs-data-exact-capacity-requires-ubi-attach-and-actual-image",
+            "early-overlay-init-and-pivot-unimplemented",
+            "offline-backup-migration-and-recovery-unvalidated",
+            "whole-ubi-replacement-would-destroy-persistent-data",
+        ),
     )
 
 
 def audit_immutable_rootfs(rootfs: Path) -> dict:
-    """Read-only structural guard against embedding per-device state.
-
-    Returns paths, never file contents. This check is necessary but not
-    sufficient for sanitizing generic lower-root images: credentials could
-    still be stored in unexpected locations.
-    """
+    """Read-only guard for obvious personalized files. Does not read values."""
     if not rootfs.is_dir() or rootfs.is_symlink():
         raise StoragePlanError("Staged rootfs is missing or a symlink")
     blocked_patterns = (
-        "root/.ssh/authorized_keys",
-        "etc/ssh/ssh_host_*",
-        "etc/machine-id",
-        "etc/conf.d/usbgadget",
-        "etc/iwd/*.psk",
-        "etc/iwd/*.8021x",
-        "etc/iwd/*.open",
-        "var/lib/iwd/*",
-        "var/lib/bluetooth/*",
-        "var/lib/audio-module/identity/*",
-        "var/lib/audio-module/settings/*",
+        "root/.ssh/authorized_keys", "etc/ssh/ssh_host_*", "etc/machine-id",
+        "etc/conf.d/usbgadget", "etc/iwd/*.psk", "etc/iwd/*.8021x",
+        "etc/iwd/*.open", "var/lib/iwd/*", "var/lib/bluetooth/*",
+        "var/lib/audio-module/identity/*", "var/lib/audio-module/settings/*",
     )
     found: set[str] = set()
     for pattern in blocked_patterns:
         for path in rootfs.glob(pattern):
             if path.is_file() or path.is_symlink():
-                # Never inspect or log private values. Paths are enough.
-                if path.name == "machine-id" and not path.is_symlink() and path.stat().st_size == 0:
+                if (path.name == "machine-id" and not path.is_symlink()
+                        and path.stat().st_size == 0):
                     continue
                 found.add(path.relative_to(rootfs).as_posix())
             elif path.is_dir() and pattern.endswith("*"):

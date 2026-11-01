@@ -48,8 +48,10 @@ The static descriptor always sets runtime_verified=false.
 
 Each device may declare storage.json separately from its active firmware
 profile. The first Capsula candidate contains UBIFS rootfs, UBIFS
-rootfs_data for OverlayFS upper/work, and a separate identity volume.
-The read-only storage-plan command checks total LEB budgets and never
+rootfs_data which autoresizes to the remaining UBI space. Identity
+is an independent protected physical MTD partition after the boot chain
+and before kernel/DTB.
+The read-only storage-plan command checks MTD order and UBI space policy and never
 changes the NAND or image builder. The active layout is explicitly
 legacy-single-ubifs; activating a future layout without validating a
 new early-init boot contract is forbidden.

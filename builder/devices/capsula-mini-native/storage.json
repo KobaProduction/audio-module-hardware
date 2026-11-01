@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "device": "capsula-mini-native",
   "state": "design-only",
   "current": {
@@ -8,10 +8,31 @@
     "volume_id": 0,
     "allocated_lebs": 1652,
     "boot_root": "ubi0:rootfs",
-    "writable_root": true
+    "writable_root": true,
+    "mtd_layout": ["bootloader", "reserved", "tpl", "misc", "kernel", "dtb", "ubi"]
   },
   "candidate": {
-    "layout": "ubi-root-overlay",
+    "layout": "boot-identity-kernel-rootfs-data",
+    "physical_partition_policy": "explicit-mtd",
+    "physical_partitions": [
+      {"name": "bootloader", "offset": 0, "bytes": 2097152, "role": "boot-chain", "preserve_always": true},
+      {"name": "reserved", "offset": 2097152, "bytes": 6291456, "role": "factory-reserved", "preserve_always": true},
+      {"name": "tpl", "offset": 8388608, "bytes": 8388608, "role": "boot-chain", "preserve_always": true},
+      {"name": "misc", "offset": 16777216, "bytes": 2097152, "role": "boot-chain", "preserve_always": true},
+      {"name": "identity", "offset": 18874368, "bytes": 2097152, "role": "device-identity", "preserve_always": true, "format": "unselected", "provisioning_verified": false},
+      {"name": "kernel", "offset": 20971520, "bytes": 26214400, "role": "kernel", "preserve_always": false},
+      {"name": "dtb", "offset": 47185920, "bytes": 1048576, "role": "kernel-description", "preserve_always": false},
+      {"name": "ubi", "offset": 48234496, "bytes": 220200960, "role": "system-and-data", "preserve_always": false}
+    ],
+    "ubi": {
+      "mtd_partition": "ubi",
+      "volumes": [
+        {"name": "rootfs", "id": 0, "role": "immutable-system", "filesystem": "ubifs", "allocation": "image-sized", "max_lebs": 1024, "read_only_at_runtime": true, "preserve_during_system_update": false, "preserve_during_clean_install": false},
+        {"name": "rootfs_data", "id": 1, "role": "user-overlay", "filesystem": "ubifs", "allocation": "autoresize-remainder", "min_lebs": 32, "read_only_at_runtime": false, "preserve_during_system_update": true, "preserve_during_clean_install": false}
+      ],
+      "additional_fixed_tail_reserve_lebs": 0,
+      "ubi_internal_bad_block_reserves": "managed-by-ubi"
+    },
     "kernel_boot_root": "ubi0:rootfs",
     "base_filesystem": "ubifs",
     "overlay_filesystem": "overlayfs",
@@ -24,51 +45,19 @@
       "work": "/overlay/work",
       "identity": "/identity"
     },
-    "volumes": [
-      {
-        "name": "rootfs",
-        "id": 0,
-        "role": "immutable-system",
-        "filesystem": "ubifs",
-        "max_lebs": 1024,
-        "read_only_at_runtime": true,
-        "preserve_during_system_update": false,
-        "preserve_during_clean_install": false
-      },
-      {
-        "name": "rootfs_data",
-        "id": 1,
-        "role": "user-overlay",
-        "filesystem": "ubifs",
-        "max_lebs": 512,
-        "read_only_at_runtime": false,
-        "preserve_during_system_update": true,
-        "preserve_during_clean_install": false
-      },
-      {
-        "name": "identity",
-        "id": 2,
-        "role": "device-identity",
-        "filesystem": "ubifs",
-        "max_lebs": 16,
-        "read_only_at_runtime": true,
-        "preserve_during_system_update": true,
-        "preserve_during_clean_install": true
-      }
-    ],
-    "safety_unallocated_lebs": 100,
-    "boot_pivot_verified": false,
-    "initial_provisioning_implemented": false,
-    "volume_migration_implemented": false,
-    "update_rootfs_only_implemented": false,
-    "recovery_validated": false,
-    "bootloader_root_parameter_unchanged": true,
     "required_kernel_symbols": [
       "CONFIG_OVERLAY_FS=y",
       "CONFIG_UBIFS_FS=y",
       "CONFIG_MTD_UBI=y"
     ],
-    "early_init_implemented": false
+    "bootloader_relocation_verified": false,
+    "kernel_dtb_offsets_verified": false,
+    "identity_format_provisioning_implemented": false,
+    "early_init_implemented": false,
+    "boot_pivot_verified": false,
+    "volume_migration_implemented": false,
+    "update_rootfs_only_implemented": false,
+    "recovery_validated": false
   },
   "alternative": {
     "layout": "squashfs-on-ubiblock",
