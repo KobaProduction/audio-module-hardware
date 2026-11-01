@@ -79,6 +79,11 @@ def validate_target(t: dict) -> None:
         raise ProfileError("UBIFS logical volume exceeds physical partition")
     if t["bootloader"]["mode"] != "retain-vendor":
         raise ProfileError("Unverified bootloader replacement is forbidden")
+    storage = t.get("storage", {})
+    if (storage.get("active_layout") != "legacy-single-ubifs"
+            or storage.get("candidate_file") != "storage.json"
+            or storage.get("candidate_activated") is not False):
+        raise ProfileError("Unverified storage-layout migration is forbidden")
     for component, files in t["kernel"].get("runtime_firmware", {}).items():
         if not re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+", component):
             raise ProfileError("Invalid capability firmware binding: " + component)

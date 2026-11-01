@@ -12,8 +12,8 @@ and flasher projects without changing target contracts.
 
 - kernel/ — pinned SoC Linux sources, optional Kconfig driver selection and a 246-path author driver/provenance catalog
 - uboot/ — explicit bootloader policy (retain vendor on current board)
-- firmware/alpine/ — common Alpine source pins, optional component packages/services, reusable OpenRC configuration
-- builder/ — build engine; devices/ owns the model profile, capability selection and overlay
+- firmware/alpine/ — common Alpine packages/OS services; firmware/storage/ — generic overlay boot and filesystem ownership contract
+- builder/ — build engine; devices/ owns model, optional components and storage volume profiles
 - hal/ — common versioned capability contract compiled to device metadata (build-host only)
 - tools/ — transport, flashing, backup and recovery; optional HAL-based diagnostics
 - builder/build.py — source-based kernel/rootfs/UBI image build driver
@@ -39,6 +39,8 @@ repositories; package versions are NOT fully frozen yet.
 Commands from the repository root:
 
     python3 -m builder.build plan --target capsula-mini-native
+    python3 -m builder.build storage-plan --target capsula-mini-native
+    python3 -m builder.build storage-audit --target capsula-mini-native
     python3 -m builder.build fetch-kernel --target capsula-mini-native
     python3 -m builder.build kernel --target capsula-mini-native
     sudo python3 -m builder.build rootfs --target capsula-mini-native --authorized-key-file /path/to/your.pub
@@ -61,6 +63,20 @@ For source-only checks run:
 Enable pre-push hook on a new checkout:
 
     git config core.hooksPath .githooks
+
+## Future read-only base plus persistent overlay (not installed)
+
+The current Capsula Mini has a single writable UBIFS rootfs and does not
+preserve settings across whole-UBI replacement. Builder now has a
+capacity-checked design-only profile for a read-only UBIFS system root,
+UBIFS rootfs_data with an OverlayFS writable upper/work, and a separate
+identity UBI volume. The existing firmware build remains legacy-only.
+
+This follows the OpenIPC NAND architecture (which need not use SquashFS),
+while leaving SquashFS-on-ubiblock as a research-only future provider.
+The new layout cannot be installed or switched on until early boot/pivot,
+actual volumes, backup/identity migration and physical recovery work.
+See docs/STORAGE_LAYOUT.md.
 
 ## HAL and safe update architecture
 
@@ -130,3 +146,9 @@ NAND backups are not redistributed.
 For a file-by-file audit of the original author's kernel drivers,
 userland helpers and unavailable binary sources, see
 [Author source ownership](docs/AUTHOR_SOURCE_MAPPING.md).
+
+The optional storage-audit command only inspects a locally staged rootfs
+for per-device state (SSH host keys, user authorizations, Wi-Fi credentials,
+machine-id, gadget identity, and data folders). It does not copy or log
+secret contents. The existing image recipe commonly contains provisioning
+data and therefore is NOT automatically a safe immutable system image.

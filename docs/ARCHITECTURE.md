@@ -134,3 +134,16 @@ proposes update/reset modes but blocks all write paths until verified
 off-device backup/restore and hardware recovery exist.
 
 Capsula Mini Ring LED is not a declared/planned device capability.
+
+
+## Future NAND storage layer (design-only, no flash changes)
+
+A device storage.json under Builder describes a prospective read-only
+UBIFS system root and persistent UBIFS rootfs_data. Firmware owns the
+generic OverlayFS/early-boot contract. Device-specific volume limits,
+retention and identity-volume policy remain Builder data.
+
+Builder/storage.py is a read-only capacity validator; the existing
+single writable rootfs.ubi image is still the only build target.
+SquashFS-on-ubiblock is NOT the current Capsula boot layout.
+See docs/STORAGE_LAYOUT.md and firmware/storage/README.md.

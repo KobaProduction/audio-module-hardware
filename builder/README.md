@@ -42,3 +42,14 @@ have probed or that all indirectly linked kernel code is removable.
 
 For actual hardware status the future HAL runtime must probe Linux.
 The static descriptor always sets runtime_verified=false.
+
+
+## Storage design (not currently enabled)
+
+Each device may declare storage.json separately from its active firmware
+profile. The first Capsula candidate contains UBIFS rootfs, UBIFS
+rootfs_data for OverlayFS upper/work, and a separate identity volume.
+The read-only storage-plan command checks total LEB budgets and never
+changes the NAND or image builder. The active layout is explicitly
+legacy-single-ubifs; activating a future layout without validating a
+new early-init boot contract is forbidden.

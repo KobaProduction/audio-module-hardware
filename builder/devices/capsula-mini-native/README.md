@@ -18,3 +18,12 @@ has been found. A future SPDIF modification is a separate variant profile,
 not an incompatible modification of this native profile.
 
 See docs/AUTHOR_SOURCE_MAPPING.md.
+
+
+## Candidate immutable root + user overlay
+
+storage.json is an uninstalled capacity-checked proposal: rootfs (UBIFS
+read-only), rootfs_data (UBIFS writable OverlayFS), identity (UBIFS
+read-only), and a small future-growth reserve. The currently running
+Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
+Do not treat the candidate as a tested production partition map.

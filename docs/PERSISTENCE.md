@@ -79,3 +79,15 @@ The signed-release checker also returns the preservation plan.
 No code in this phase touches flash or reads private key material.
 
 This is SOURCE VALIDATION, not proof of operational persistence.
+
+
+## Future storage split (not yet active)
+
+Builder/devices/capsula-mini-native/storage.json contains a planned
+three-volume UBIFS layout. System updates would replace only the
+read-only rootfs volume; a persistent rootfs_data OverlayFS layer
+would keep user configuration, while an independent identity volume
+would survive clean install and factory reset. The existing device has
+none of these separate volumes; all current update/reset write paths
+remain blocked until a verified migration and recovery path exists.
+See docs/STORAGE_LAYOUT.md.
