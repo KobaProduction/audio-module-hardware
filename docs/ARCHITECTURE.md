@@ -3,17 +3,18 @@
 ## Scope and ownership
 
 This repository is the initial integrated hardware delivery system, not
-a VK-specific firmware fork. The shared main branch owns reusable components
-and device profiles. A release is selected by target ID, not by changing to
+a VK-specific firmware fork. The shared main branch owns reusable components;
+concrete device profiles are owned exclusively by builder/devices. A release
+is selected by builder device ID, not by changing to
 a permanently divergent device branch.
 
 | Component | Responsibility | Future extraction |
 | --- | --- | --- |
-| kernel/ | Pinned kernel, config, patches, DT | separate kernel repository |
+| kernel/ | SoC source pins, kernel support, patches, DT | separate kernel repository |
 | uboot/ | Boot chain and validated bootloader builds | separate U-Boot repository |
 | firmware/ | Alpine rootfs and UBI integration | separate firmware repository |
-| builder/ | Resolve target and assemble images | separate builder repository |
-| targets/ | SoC, board, hardware variant | builder's device profiles |
+| builder/ | Resolve device and assemble images | separate builder repository |
+| builder/devices/ | Board models, variants and minimal overlays | builder device profiles |
 | tools/ | USB transport, backup and recovery | separate utilities if needed |
 
 Audio Module Application is a separate repo. It has not been implemented, so
@@ -24,11 +25,11 @@ home automation remain outside this hardware repository.
 
 1. SoC determines CPU architecture, baseline support, toolchain and boot chain.
    Initial platform: Amlogic A113X.
-2. Board determines NAND geometry, peripheral wiring, DTS and supported modules.
+2. The Builder device profile determines NAND geometry, wiring, DTS and modules.
    Initial board: Capsula Mini.
 3. Variant captures modifications (future SPDIF pinmux, other LEDs, etc.)
    without duplicating kernel or Alpine sources.
-4. Builder pins source revisions, builds kernel/modules, configures rootfs,
+4. Builder consumes SoC source pins, builds kernel/modules, configures rootfs,
    assembles UBIFS/UBI and emits checksummed artifacts.
 
 A SPDIF variant must not be declared supported until its DTS/DTBO and
@@ -66,7 +67,7 @@ must pass compatibility and hardware acceptance.
 As devices, contributors and independent release cycles increase, extract
 kernel, U-Boot, firmware, builder and optional tools into separate repos.
 Keep interfaces stable and dependencies pinned first so the split is
-mechanical. Device profiles remain structured data rather than long-lived
+mechanical. Builder device profiles remain structured data rather than long-lived
 branches, so generic fixes apply to all supported speakers.
 
 Reference: https://github.com/OpenIPC/builder
@@ -76,3 +77,16 @@ Reference: https://github.com/OpenIPC/builder
 The source-based firmware recipe is a new engineering implementation.
 It is NOT yet a hardware-tested replacement for the author's current
 working Alpine 3.24.1 image.
+
+## OpenIPC boundary verified
+
+The real OpenIPC Builder stores device definitions in its own devices/
+subtree, and overlays a common firmware repository during assembly. We
+follow the same ownership inside this initially combined repository:
+firmware and kernel components never reference concrete consumer models;
+the Builder alone resolves a selected device and applies its differences.
+
+Before adding another device, reuse the same SoC platform pin when possible.
+Do not copy kernel source commits or Alpine rootfs recipes between device
+profiles. A future repository split can take builder/ (including devices/)
+without migrating the hardware profiles out of firmware internals.

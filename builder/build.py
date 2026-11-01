@@ -160,7 +160,7 @@ def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
 def apply_overlay(t: dict, rootfs: Path, authorized_key: Path | None) -> None:
     # Shared overlay first, per-device deltas second (OpenIPC-style).
     for overlay in (ROOT / "firmware/alpine/overlay",
-                    ROOT / "targets" / t["id"] / "overlay"):
+                    ROOT / "builder" / "devices" / t["id"] / "overlay"):
         if not overlay.is_dir():
             continue
         for path in sorted(overlay.rglob("*")):

@@ -10,15 +10,16 @@ and flasher projects without changing target contracts.
 
 ## Source layout
 
-- kernel/ — upstream kernel sources, patches, Device Tree contracts
+- kernel/ — reusable SoC kernel sources, patches and pinned revisions
 - uboot/ — explicit bootloader policy (retain vendor on current board)
 - firmware/alpine/ — Alpine source pins and rootfs package definitions
-- builder/ — reusable profile validation and build composition
-- targets/ — SoC + board + variant profiles and overlays
+- builder/ — build engine; devices/ holds each physical model's profile and overlay
 - tools/ — transport, flashing, backup and recovery contracts
-- scripts/build.py — source-based kernel/rootfs/UBI image build driver
+- builder/build.py — source-based kernel/rootfs/UBI image build driver
 - docs/ARCHITECTURE.md — boundaries, provenance and future repository split
 
+Builder selects a device configuration from builder/devices; shared SoC inputs
+come from kernel/platforms. No device definition lives at repository root.
 A target is declared as data, not a long-running Git branch.
 Common fixes flow to all devices. Source revisions are pinned; target
 profiles contain the physical flash geometry and protected areas.
@@ -36,11 +37,11 @@ repositories; package versions are NOT fully frozen yet.
 
 Commands from the repository root:
 
-    python3 scripts/build.py plan --target capsula-mini-native
-    python3 scripts/build.py fetch-kernel --target capsula-mini-native
-    python3 scripts/build.py kernel --target capsula-mini-native
-    sudo python3 scripts/build.py rootfs --target capsula-mini-native --authorized-key-file /path/to/your.pub
-    sudo python3 scripts/build.py image --target capsula-mini-native
+    python3 -m builder.build plan --target capsula-mini-native
+    python3 -m builder.build fetch-kernel --target capsula-mini-native
+    python3 -m builder.build kernel --target capsula-mini-native
+    sudo python3 -m builder.build rootfs --target capsula-mini-native --authorized-key-file /path/to/your.pub
+    sudo python3 -m builder.build image --target capsula-mini-native
 
 The rootfs stage is intentionally one-shot: it refuses to overwrite an
 existing rootfs directory, which may contain an SSH provisioning key.

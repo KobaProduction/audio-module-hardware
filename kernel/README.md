@@ -1,6 +1,11 @@
-# Kernel
+# Kernel and SoC platforms
 
-Initial platform uses comp18man/vk-capsula-mini-a113x-linux at a pinned
-Git commit, marusia_mini_defconfig and the meson-axg-s420-marusia-mini.dtb.
-Build Image, DTB and modules from sources. Device-specific kernel changes
-can later move into our licensed patch series; no opaque kernel binaries.
+SoC-specific kernel source and revision are defined once in
+platforms/<soc>.json. Initial SoC: Amlogic A113X, based on the pinned
+comp18man/vk-capsula-mini-a113x-linux source tree.
+
+Concrete board defconfig and DTB selection belong to Builder device profiles.
+Multiple speakers based on one SoC can share sources without source duplication.
+
+Build Image, DTB and modules from sources; proprietary drivers and firmware
+require explicit provenance and licensing review.

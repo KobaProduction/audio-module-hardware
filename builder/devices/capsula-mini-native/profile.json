@@ -6,9 +6,6 @@
   "soc": "amlogic-a113x",
   "architecture": "aarch64",
   "kernel": {
-    "source": "https://github.com/comp18man/vk-capsula-mini-a113x-linux.git",
-    "revision": "8d850405b091aaf217f8bb1bbdf22852f5cdb61e",
-    "branch_for_reference": "vk-mini-a113x",
     "defconfig": "marusia_mini_defconfig",
     "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb"
   },

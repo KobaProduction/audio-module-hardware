@@ -3,11 +3,11 @@
 Read README.md, then docs/ARCHITECTURE.md completely before work.
 
 Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
-U-Boot policy, source-based Alpine image creation, target profiles, and
+U-Boot policy, source-based Alpine image creation, builder-owned device profiles, and
 eventually transport/backup/recovery tooling.
 
 Current first supported profile is capsula-mini-native on Amlogic A113X.
-main contains shared sources and device-profile data, NOT unrelated device
+main contains shared sources and builder/device profiles, NOT unrelated device
 fork branches. Do not incorporate unique device secrets, factory dumps,
 closed vendor binaries or unlicensed blobs into Git.
 

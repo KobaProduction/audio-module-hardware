@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target, validate_target
-from scripts import build
+from builder import build
 
 
 class ProfileTests(unittest.TestCase):
@@ -42,6 +42,32 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ProfileError, "eraseblock aligned"):
             validate_target(changed)
 
+    def test_device_profile_contains_only_board_kernel_selection(self) -> None:
+        source = json.loads(
+            (ROOT / "builder/devices/capsula-mini-native/profile.json").read_text()
+        )
+        self.assertEqual(set(source["kernel"]), {"defconfig", "dtb"})
+        soc = json.loads(
+            (ROOT / "kernel/platforms/amlogic-a113x.json").read_text()
+        )
+        self.assertEqual(source["soc"], soc["soc"])
+        self.assertEqual(self.profile["kernel"]["revision"], soc["kernel"]["revision"])
+        self.assertFalse((ROOT / "targets").exists())
+
+    def test_platform_is_not_overridden_by_device(self) -> None:
+        original = ROOT / "builder/devices/capsula-mini-native/profile.json"
+        device = json.loads(original.read_text())
+        self.assertNotIn("revision", device["kernel"])
+        self.assertNotIn("source", device["kernel"])
+        self.assertIn("revision", self.profile["kernel"])
+
+    def test_device_overlay_and_source_separation(self) -> None:
+        build_source = (ROOT / "builder/build.py").read_text()
+        self.assertIn('ROOT / "builder" / "devices" / t["id"] / "overlay"', build_source)
+        self.assertNotIn('ROOT / "targets"', build_source)
+        self.assertNotIn("capsula-mini", (ROOT / "firmware/alpine/packages.txt").read_text())
+        self.assertNotIn("capsula-mini", (ROOT / "firmware/alpine/sources.json").read_text())
+
     def test_vendor_bootloader_is_protected(self) -> None:
         changed = copy.deepcopy(self.profile)
         changed["bootloader"]["mode"] = "replace"
@@ -63,7 +89,7 @@ class BuildTests(unittest.TestCase):
             source = build.SOURCES[item]
             self.assertTrue(source["url"].startswith("https://"))
             self.assertEqual(len(source["sha256"]), 64)
-        self.assertNotIn("allow-untrusted", (ROOT / "scripts/build.py").read_text())
+        self.assertNotIn("allow-untrusted", (ROOT / "builder/build.py").read_text())
 
     def test_cached_download_hash_protected(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -110,7 +136,7 @@ class BuildTests(unittest.TestCase):
 
     def test_empty_application_is_not_added(self) -> None:
         self.assertEqual(self.profile["application"]["enabled"], False)
-        self.assertNotIn("audio-module-application", (ROOT / "scripts/build.py").read_text())
+        self.assertNotIn("audio-module-application", (ROOT / "builder/build.py").read_text())
 
 
 if __name__ == "__main__":

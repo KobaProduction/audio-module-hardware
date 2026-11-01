@@ -6,7 +6,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGETS = ROOT / "targets"
+DEVICES = ROOT / "builder" / "devices"
+PLATFORMS = ROOT / "kernel" / "platforms"
 HEX_SHA = re.compile(r"^[0-9a-f]{40}$")
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{1,63}$")
 
@@ -18,13 +19,29 @@ class ProfileError(ValueError):
 def load_target(name: str) -> dict:
     if not NAME.fullmatch(name):
         raise ProfileError("Invalid target name")
-    path = TARGETS / (name + ".json")
+    path = DEVICES / name / "profile.json"
     if not path.is_file():
-        raise ProfileError("Unknown target: " + name)
+        raise ProfileError("Unknown builder device: " + name)
     target = json.loads(path.read_text(encoding="utf-8"))
+    if target.get("id") != name:
+        raise ProfileError("Device directory and profile ID mismatch")
+    soc = target.get("soc", "")
+    if not NAME.fullmatch(soc):
+        raise ProfileError("Invalid SoC identifier")
+    soc_file = PLATFORMS / (soc + ".json")
+    if not soc_file.is_file():
+        raise ProfileError("Unsupported SoC: " + soc)
+    platform = json.loads(soc_file.read_text(encoding="utf-8"))
+    if platform.get("schema") != 1 or platform.get("soc") != soc:
+        raise ProfileError("SoC platform manifest mismatch")
+    if target.get("architecture") != platform.get("architecture"):
+        raise ProfileError("Device/SoC architecture mismatch")
+    base_kernel = platform.get("kernel", {})
+    device_kernel = target.get("kernel", {})
+    if set(base_kernel) & set(device_kernel):
+        raise ProfileError("Device may not override SoC kernel source or revision")
+    target["kernel"] = {**base_kernel, **device_kernel}
     validate_target(target)
-    if target["id"] != name:
-        raise ProfileError("Filename and target ID mismatch")
     return target
 
 

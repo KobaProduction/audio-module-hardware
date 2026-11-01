@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(git rev-parse --show-toplevel)"
-for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md scripts/build.py builder/profile.py; do
+for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md builder/build.py builder/profile.py builder/devices/capsula-mini-native/profile.json kernel/platforms/amlogic-a113x.json; do
     test -s "$f" || { echo "Missing expected bootstrap: $f" >&2; exit 1; }
 done
 empty_tree="$(git hash-object -t tree /dev/null)"
@@ -16,8 +16,8 @@ git ls-files --cached --others --exclude-standard | while IFS= read -r path; do
 done
 python3 -m compileall -q builder scripts tests
 python3 -m unittest discover -s tests -v
-python3 scripts/build.py plan >/dev/null
+python3 -m builder.build plan >/dev/null
 sh -n scripts/verify.sh
 sh -n .githooks/pre-push
-sh -n targets/capsula-mini-native/overlay/etc/init.d/usbgadget
+sh -n builder/devices/capsula-mini-native/overlay/etc/init.d/usbgadget
 echo "Hardware source and profile verification passed."
