@@ -1,0 +1,1486 @@
+{
+  "schema": 1,
+  "source_repository": "https://github.com/comp18man/vk-capsula-mini-a113x-linux",
+  "source_revision": "8d850405b091aaf217f8bb1bbdf22852f5cdb61e",
+  "comparison_base": "linux-6.18.56-stable-17ad2612c11a748b50d32eefc681344b26fea946",
+  "source_owner": "comp18man and upstream authors (see git history)",
+  "file_count": 246,
+  "files": [
+    {
+      "path": "Documentation/devicetree/bindings/arm/amlogic.yaml",
+      "change": "M",
+      "group": "device-tree-bindings",
+      "git_blob": "c023dfd0e36d1afa7e12f72c6fa36cff7f254df1"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/auxdisplay/led-7-segment.yaml",
+      "change": "A",
+      "group": "device-tree-bindings",
+      "git_blob": "2dff48e08e26ee43f2f0913d426e0e8f52893bce"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/iio/light/rohm,bh1730fvc.yaml",
+      "change": "A",
+      "group": "device-tree-bindings",
+      "git_blob": "de32806cbf417f88e49448e752ba6ae3ca9e4fa1"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/input/hynitron,csk05t.yaml",
+      "change": "A",
+      "group": "device-tree-bindings",
+      "git_blob": "7535c6a2ec96a77c2646b6f6d411eec83db761fe"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/leds/leds-is31fl32xx.txt",
+      "change": "M",
+      "group": "device-tree-bindings",
+      "git_blob": "8ba1338d14686573617c606db07c943e8a5de161"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/net/bluetooth/amlogic,w155s2-bt.yaml",
+      "change": "M",
+      "group": "device-tree-bindings",
+      "git_blob": "d77765baa4466ebb54ee4a0615abe515efcb7c7f"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/sound/neofidelity,ntp8918.yaml",
+      "change": "M",
+      "group": "device-tree-bindings",
+      "git_blob": "9d44399abbbe7b263b2207c67a0944ba5dd63b91"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/vendor-prefixes.yaml",
+      "change": "M",
+      "group": "device-tree-bindings",
+      "git_blob": "8c8de83015a0a63802af9f341a113f5eae8aed49"
+    },
+    {
+      "path": "README",
+      "change": "M",
+      "group": "other-kernel-support",
+      "git_blob": "89852f895483e5bd3d7dff0638d53025abb3c7a3"
+    },
+    {
+      "path": "arch/arm64/boot/dts/amlogic/Makefile",
+      "change": "M",
+      "group": "board-device-tree",
+      "git_blob": "2568e47e8277e2c416cc1df37f56f318d8d766ba"
+    },
+    {
+      "path": "arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts",
+      "change": "A",
+      "group": "board-device-tree",
+      "git_blob": "c6e5bae879ab35494b4a5d750bcac59cfc62bb88"
+    },
+    {
+      "path": "arch/arm64/configs/marusia_mini_defconfig",
+      "change": "A",
+      "group": "board-kconfig",
+      "git_blob": "92b64268b40e25a980606ea0524b48f7960f6beb"
+    },
+    {
+      "path": "arch/arm64/configs/marusia_mini_ram.config",
+      "change": "A",
+      "group": "board-kconfig",
+      "git_blob": "9adebd8248ba4afa0641ebe99d616e7a899f285c"
+    },
+    {
+      "path": "drivers/auxdisplay/Kconfig",
+      "change": "M",
+      "group": "display-kernel-driver",
+      "git_blob": "5235809fc0262b86ff01e4821a46c65650e39d4d"
+    },
+    {
+      "path": "drivers/auxdisplay/Makefile",
+      "change": "M",
+      "group": "display-kernel-driver",
+      "git_blob": "3833fff81434143c1fd4cf70f88794a8db81410a"
+    },
+    {
+      "path": "drivers/auxdisplay/line-display.c",
+      "change": "M",
+      "group": "display-kernel-driver",
+      "git_blob": "f68e93eedf610c72c7fda90eaaca7c53ea8add45"
+    },
+    {
+      "path": "drivers/auxdisplay/line-display.h",
+      "change": "M",
+      "group": "display-kernel-driver",
+      "git_blob": "e0d37b4f7c77a0b0990b7ddf99ad3c278b829dae"
+    },
+    {
+      "path": "drivers/auxdisplay/seg-led-class.c",
+      "change": "A",
+      "group": "display-kernel-driver",
+      "git_blob": "7baf1b9426cf313f97ce4b9e70ba96b7e46e13da"
+    },
+    {
+      "path": "drivers/bluetooth/hci_aml.c",
+      "change": "M",
+      "group": "bluetooth-kernel-driver",
+      "git_blob": "cd309acfab02cbe1f3bca7e6f9e29bf276589853"
+    },
+    {
+      "path": "drivers/iio/light/Kconfig",
+      "change": "M",
+      "group": "light-sensor-kernel-driver",
+      "git_blob": "e0b635a202d0fdbb7d0da94c42393bc445555cb2"
+    },
+    {
+      "path": "drivers/iio/light/Makefile",
+      "change": "M",
+      "group": "light-sensor-kernel-driver",
+      "git_blob": "27ef7906a02ae2cf70a65104c6e828e1b764f2fa"
+    },
+    {
+      "path": "drivers/iio/light/bh1730.c",
+      "change": "A",
+      "group": "light-sensor-kernel-driver",
+      "git_blob": "08f9bee33b788bd490971adfb1560086a4720b2a"
+    },
+    {
+      "path": "drivers/input/keyboard/Kconfig",
+      "change": "M",
+      "group": "touch-keys-kernel-driver",
+      "git_blob": "b58a97e9afde36caae1c798d615c7828444a7a09"
+    },
+    {
+      "path": "drivers/input/keyboard/Makefile",
+      "change": "M",
+      "group": "touch-keys-kernel-driver",
+      "git_blob": "f78ae1e0c337d91c7b4f505695f7b4f181b09389"
+    },
+    {
+      "path": "drivers/input/keyboard/csk05t.c",
+      "change": "A",
+      "group": "touch-keys-kernel-driver",
+      "git_blob": "da01ee6e88572c7c16fc156d8ace1e887625675c"
+    },
+    {
+      "path": "drivers/leds/leds-is31fl32xx.c",
+      "change": "M",
+      "group": "led-controller-kernel-driver",
+      "git_blob": "1e86d9e5a8b73a44a8a321d6ac23520fd35005a0"
+    },
+    {
+      "path": "drivers/mtd/nand/raw/meson_nand.c",
+      "change": "M",
+      "group": "nand-kernel-driver",
+      "git_blob": "fad3cd81141ce2441cb03dc5603a47f83a058e73"
+    },
+    {
+      "path": "drivers/mtd/nand/raw/nand_toshiba.c",
+      "change": "M",
+      "group": "nand-kernel-driver",
+      "git_blob": "dc11607cda3a657a818e69973882c86c98aea478"
+    },
+    {
+      "path": "drivers/net/wireless/Kconfig",
+      "change": "M",
+      "group": "other-kernel-support",
+      "git_blob": "93275645c711b92bcec37fb3d60ca71f94e6d5a2"
+    },
+    {
+      "path": "drivers/net/wireless/Makefile",
+      "change": "M",
+      "group": "other-kernel-support",
+      "git_blob": "6015bf2f613d1e0ea273c9e4796937270b39b53e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/Kconfig",
+      "change": "A",
+      "group": "other-kernel-support",
+      "git_blob": "822e43d30102730cb4159342485c77a948a304fa"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/Makefile",
+      "change": "A",
+      "group": "other-kernel-support",
+      "git_blob": "c8722d45477a1ff2215d97e9fc0e829582e1aaac"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/Kconfig",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "25f222fc5e4ba98aea60996a35ded5b9e80fd455"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/Makefile",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "29daa2d00ec83ac6fc4bbfb52113fd80634b51b5"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_ana_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8560cf7154e5ef96829d0f9827ea6a52689fc96e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_bt_pmu_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "19ca0884dfa9bc0961b67279c70febae9d48b640"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_efuse_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "90a3c9460896f668c8cf10c5f33647ebaefb0f1f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_intf_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "56e79b748d61bd907508536bc49550711b7ff778"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_pmic_i2c_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ca06970f4e03c949c5180c6dfbcc0e971439cb2c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/chip_pmu_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "2088eb55476d4afe2c26ca6d82ecf89892129dac"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/fi_cmd.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "09022081a8882e22a739b8a8c2d9a5c3715a8602"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/fi_sdio.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e3e38d2498610d0c62146b1867e0ce4d4399bc30"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/fucode_em4.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "142d8ba45d1bf1036a65575867c25e1d50ef4776"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/patch_fi_cmd.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ee6a5369039d2c5b135bae3558459670eb151ba3"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_adda_core_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "6a0e2cc9129e01754ef1f8d68bc80e166e97e77f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_adda_esti_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e316994226fa5aa6a6542bbe0335b839f0a7225c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_adda_recv_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a2059b05976e8c1fdb9d75179f61c2ee95b557f8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_adda_xmit_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7788a25772f5d993d9e59a7d457396caabd31dee"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_rx_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f17b5c0212c7ab6c7a41ef3daf5d3d124758a163"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_sx_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7019eb56ab70a661893905fc9a5eff7fcec08488"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_top_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c0419d43d9be52645268c406929dda8eeb6983c1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_tx_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "bf180978c96379f596621a11d916308053438514"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/rf_d_xosc_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1e5bfa1aaaf78ffd86da3372f3aa2fb21109221e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wf_register.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f2b2b78c05ffa15f7c02f1af2ecdbbbf092b0943"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_adda_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b772bb73ee105c54a2a0e3542a1c3ae37a605f67"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_agc_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e850665c2e07e8bed42a32467f152feadcfdb201"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_aon_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3a38a28fe50a813951ffdb2bfd08c951c20c2018"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_coex_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "68be97d11a79ae26359c722a1b05889fa087cfb0"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_i2c_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "54b3762e3b23357c556c2c1127bb41fb62a07e0e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_intf_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7ec21d85f4a191e947fc6ccbd048a16c61b173fd"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_mac_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b3cc16e976daf0138cd992e8383206593e9b943d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_mac_main_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "fbce31e192100ce7d9c7aeff1acc9dae080e62c7"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_mac_rx_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c669dacdd6168db80e84b143f4a6e8baa0d24d33"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_mac_timer_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "fa4e239c6bc6a59ffb6478f0c7c37c6f0fdb94a4"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_mac_tx_reg.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "668baea16d4db17d6cdc7aea7ff5bf3c6ae64d64"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_ofdm_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "37adb97d13539d56de1bfac614bb1bf436303d83"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_phy_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4020cc95188dc300142d1b61bcca4f55aa95eb4f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_sdio_cfg_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "181521572ad1c152781b008581ca0be162cf044a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_sdio_if_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "bb92e6c95a6d95c271c8f76c9e936d44d3c4aa9b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_sys_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "91937ac732f993a77308e8dc7d8a8880dd6e341f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_top_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b9e82b28e2952c8f7b722e4a10925ee53f221fcc"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/common/wifi_uart_addr.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "aa27adebfb2a4b5ac2c35e858bda7849dd9db777"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_compat.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5b85736f3c1b1f78eb2754af45a0490a5096cd27"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_compat.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "0abe64935902bcbc1fa8fb48d715ee0d857a3203"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_static_buf.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "90901705c8840e0076ef630c1279ff7d26392781"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_drv_cfg_0.conf",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7a1cd22e76c4e4516422b7e08180270b0828adab"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "828f32e11c71237ecf4fe6467868a2f4b4b8ee9f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0125.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8289daff448f96a15cd486c2c101aa4acb4072fe"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0133.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b53763887ded7d17e8e5729917d7f791e4fd501d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0211.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ce6badb658eb74a72919ac350f016cc01c51d0e2"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0231.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7766ab0bc8bfae2f4486c6f4165c3a876fdeca57"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0321.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "95bf1ea352233363407bd2d505ee5ec8fc7afbe9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0331.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "95bf1ea352233363407bd2d505ee5ec8fc7afbe9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0333.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "95bf1ea352233363407bd2d505ee5ec8fc7afbe9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0531.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "06fe1123d830860622bb8b12ef95e01d6c320bf6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0631.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5ce34d3ea6685b45b7390f13bf53226c0227fdb9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0632.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5ce34d3ea6685b45b7390f13bf53226c0227fdb9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0633.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "983a5c22c966eea38abce1c086d45b710a2ff461"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0731.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f88b100ba66f11ba2939b84ee954edf26a653148"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0a11.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "610b6086bdb0ff2bd4e7bb2f4ef91ea4a112808c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_0a31.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5a34b11af8862effd237102661b9de9abc0dd378"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_ampak.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "13aae771acc485a2dc08c541eb9ab2b8d7ec5c05"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_fn_link.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "13aae771acc485a2dc08c541eb9ab2b8d7ec5c05"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/aml_wifi_rf_iton.txt",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "13aae771acc485a2dc08c541eb9ab2b8d7ec5c05"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/compat_include/linux/amlogic/aml_gpio_consumer.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "94de305612e840975adb441d6ac68840b003de33"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-ccm.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "01d4ac696ba5b34b4214707330c49d19017a1af0"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-ctr.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7769ed06c0062c35be24b0722fe1a80873c941d5"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-gcm.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "0c0d2bafabad8d0d1d565936dd891689e3de99c9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-internal-enc.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d306f4501917a4e95d39f6dc3a732b6a34d7f6f9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-internal.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "50834279316566b1532793e811e5f6783824d468"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-omac1.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "378ad6250e9af7680db4d2f0021f64e541c4f3e6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes-siv.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "27b8b0ffef2ae4efe6feb222113e629be7d290bc"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "006d5d425421fc52c07e1b2965eadb43edfa444a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes_i.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "54375cf355837051c17f792828b1d7ba3f148418"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes_siv.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "fb05d80c1f12f68be46dd4125ec46f463a52d13b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aes_wrap.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5bad6adcfa9078860dd6a7e091ae2c0984c3f97e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aml_crypto_wrap.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4824d9357be470fdd35ac0ac9d95e717c540c022"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/aml_crypto_wrap.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "301fdd7f09f1e5f8d8108d88864cdd95d2bf82a8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/ccmp.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "35a900bb57d077d1090e0c118f2bf21a2373fbd6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/sha256-internal.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "2c44d9f5b3822916106abcb3367d0f15dee1e9a1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/sha256-prf.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "14988cb18634f7d2bed76dbe4e667fe3f9ade082"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/sha256.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c18b8449eec994d8ac00627f2ee4324c439ef937"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/sha256.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b46b3b663cd6a267233854b1bba060f8968cb4d8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/sha256_i.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "23a6c2b72905bc1590bb902d536489046f015647"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/crypto/wlancrypto_wrap.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c9e54e10d6ea155c3227dbd22873a16cb64935b5"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/dpd_memory_packet.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "6b717ecd45e7cb5c2326f0a8ddb1a330571158b1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/opt_all.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5b6135a64f7b80d3a633cab5060970e6241320f6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/osdep.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4075ccb3f24db9666ce9a967493cff371a408903"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "393251f1186998531e8fc84aec49f3ff0fa1c21a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "85a3201273dc459db3794cdcebdc8bcfb0aa0d30"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel_ht.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7f3e3bcb46d5fc3b2bc1b734c283eb7b8aa3295e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel_ht.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d6243786c498412e2b82a0ab59e34b6d65b8dfac"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel_init.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f75e31e5a77bec235d0ccd3d4bcd3401eab96573"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/rc80211_minstrel_init.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "bee322388d85b530b495dd80f8e7211c1b628efc"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/version.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c48b5b632f083db3bd5d7b76ac2911530b664efd"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/w1_sdio/w1_bt_power.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "7d363265c0aab2a51fa646fca6a97ca90209e977"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/w1_sdio/w1_sdio.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "05072570888b90f193e23fd53f28761d8858c610"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/w1_sdio/w1_sdio.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "46bacfd9ceefc3e6632198890da6d9865275172b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_android.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "196f47ebf0808d1d45e051c3bf2ed2c00717b2cf"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_android.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ca3e47afeb5c6a2434ea9897a5cb6ffa5ecdd23d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_cfg80211.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e8dbfdf9d62c8f90b970e174a3d24d04be5b414e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_cfg80211.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "cf86244386580c9f3ef93c515ec34ec7a5a09da1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_clock_measure.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3fcb5daf07aa39ca7a1a08318bf4d9dbd81abc35"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_clock_measure.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a1d052cf170c7788fad8d630432785b0f2681a72"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_cmd_func.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3b735db95bac348f8f2785a6a7b0ae6de9f0b87c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_cmd_func.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c1f483e81f91c5c15af515e9504ce6f42846b9f9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_common.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3cc2f80d4936c7dab6b0859bbea00d98d287cab1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_common.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "61f27057b2a918b466653f8c5d959f7b43da8744"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_csi.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4ece3936d87eac8ae93ba67f857101b91eb0df82"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_debug.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "073992910833b8a886f6728558978b41a978dc34"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_debug.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "9ab6637253bb5e057c7aac343e381c513c45bc37"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_capture.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "6a34839fef3b1065715f122b31bc2848a2854f9e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_capture.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "376eabdde7f328e24a23b62343f3cc7014116304"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_config.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "73adc03c94f257e2345f73a7cb73633df937eb13"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_config.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "039ef3bebff5d3380090fa56ca44cee3f9e1814f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_if.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4e28aa3072838f6f07ce658151575262c5bcb131"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_if.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4e3357e58bcb56e06e543822b43e5d2492e03b5e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_main.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "14f272dea71d3b41a39bf747f7223dc61f76af03"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_main.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "245fdd1408b465c27c496fe26a1785888130e61d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_power.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "96663e3608bb1eedb7d244cb156a425e14e8b322"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_power.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "97b81ec1f60afc4ff08459a40ae179511bcb34ab"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_recv.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "fc8e4a77822bf9c02363cfaa61c2d42c96261409"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_recv.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "03e2e849ec7eb0108126c6d7697bdee4e3e04b12"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_reg_ops.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "bafc3125538650cf2b20110de0d8239216c90e04"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_reg_ops.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b2b12665c2eb040e9ddb24b575dee9251c8bad22"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_statistic.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e0c5449f25a4ff39b0bf5f8b13f0f3f6bc47155f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_statistic.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d306fffb868f14753da35c4b296ac172b54309d8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_timer.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1a2c330deb88a0330429dbf459a66bad4b18c634"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_timer.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8d1bd88a86e89223a55f97cecd48309a48d64f64"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_uapsd.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3939f92f57d4e5091361d4aebf1a0a712cf4a9dd"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_uapsd.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "cacc7bb163dfecec70a591105e613db1fd25c352"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_xmit.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d579195d799890eb76d067ca686396b512aba7f2"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_drv_xmit.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "af08e05786f7fd1790f10c06d32786693b8f834d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4d2301cc2f30f29d022c658f2536f63c6b2a7ca1"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "314b377866db377827014a5b4a56395a21d301d8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_cmd.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d1651f953b83af9ada283d6d321ec4723116b713"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_cmd.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "97b6cbc6191a30b533dfed779455fa54f802737e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_com.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "2bbc5d909643f678c0a139d060f753f55e6c28b6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_platform.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1a7ee3f895314eca84a1c279fed5908d709fcdd9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_platform.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a8fb3f8de4b6a7a0c7afeec875697693343df03e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_txdesc.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8f705f87f28b4b0a22b90caa25dc3431ccac98b0"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hal_txdesc.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4053c19a8cdd8d9b2fac8778756ed2b8b90d15d2"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hif.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8eb3cc48994c679b7815e30035bec42c4e3f4157"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_hif.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8918c7e2782809b5259d10724f1ac0f71ed34273"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_iwpriv_cmd.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f8f89f0f5a93c6429cc9e09b4355dea974e341fb"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_iwpriv_cmd.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f978ae7d9f93555dc8b1a5527481ea6a9b7a8ed7"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "0339ffb37fb1ea73e8801e338ffbb19bab7c4c27"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_acl.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4dfd52fdf65ac3e98dbd45db363f911dc20d3c5b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_acl.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c05ea664c7ca6adfc0ea447d807df67d39b1c149"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_action.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b896d536be22e52d83a102d27953373b5e8cc535"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_action.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "0e9bbcf4ab9ce2e5099ee1cf64c93f0e2afe499e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_amsdu.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5063025bf8f6f6d4d078f92696b3bf2e8e8e96f8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_amsdu.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f25270d6f6b182ec1f4885985412e4237e1f2cd7"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_arp.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8a48beb8fdb428b5382c9613c0c23fa693e9a70b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_beacon.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "34609f3b6576ae7635178540a51ed03f00263ccb"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_beacon.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b4a454c3101e2c9b29bd0575044d8ef1bd2b9d84"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_chan.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "2d8b88a0fcf8393c84086432b50ab41b30b60cd2"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_chan.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1651948c4e92486893aedf5b8225a518be2356d9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_com.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "aa63500e28683b47ea798f7c0315ed3dc9787530"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_concurrent.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b4d82d92c2a8548cf66256c351ff2ac4f9a6d438"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_concurrent.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "87e0d76a98a7c1bb76fb1512d3834b79d563f610"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_encrypt.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "627ce0dc71bb9af7b36d376c5cd121caf912e94d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_encrypt.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d854a154b4bec51115ad284875328846b22a2311"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_if.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "296cc9f3989cca3b895b188b3330537f020b6ae6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_if.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "645b101497663dd9dd756994cfa093bfacde4084"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_monitor.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "07458e1572a2cef7564fad89847c8fab9ddb6474"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_monitor.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a3ebe1b5721853c86879005b51bf5524a5b45af6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_p2p.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "49574e1a9641a699b77c138a8317b61f80f15fa7"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_p2p.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4db28adf5ba34789ef371ff26a16b6f240e0bae4"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_pmf.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e50ef8252c9a037a111a9bb534e3ce34187a9f9c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_pmf.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "9c051dc0dd93d5f37f0361ba0475685ea11a3f09"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_power.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5a455c61cd9802910fd6280f37db1ca43b60b392"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_power.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "add8bac361ebb3fba6b664815dd56a6aff52840a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_rate.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "d4523a1afa81ccce867f8f5e05f029e3a9ee349f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_rate.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "8dd7675fa7331cd222f4d6d680911be6066cfe6b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_recv.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "421f45d9385586407de1614aed29a9e1b682d2ca"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_recv.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "109dcf46621516702e0e0eafae6172915d8487b7"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_rx_status.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "761e53224e6f6e8ccc61ae74cd4db633d58e1101"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_sae.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c9935373fff3877223ff9e7f9765419c157f6b5a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_sae.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "135cd7a5dfb2c6fe6aa3a81224a37813b7f096e8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_scan.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "60b4e45e03b4fb783db31c40e1c4de5a545cad96"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_scan.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ac893c46919f9477169fb1d4b4cfbf28fc887e2b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_sta.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "c76e1809b08ae230d5048a4b861923a2c5378cf9"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_sta.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "31ae3fd2934e2488a86b6d3945b072f3474c88d4"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_var.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1c39402efa155a98eb5035fa8461cb655fc07fb0"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_xmit.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4641e6e8c4ba48bcf23b7cd91c5d3cae1ca8170b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_mac_xmit.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "006692d4df1d97f82de1003fdcb92782e18e626e"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_phy.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ad50b5e90c393a3fd65262ae5a1989079eec4216"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_phy.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "939a1c5826faaf114450b722323017ff67adb44f"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pkt_desc.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "1f60f9e7423ee8e646259b13f8512c374c95dc75"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pkt_desc.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a5dcd3f0ac579e36c44ad4c08960d246953577b8"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_conf.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "62c34128983e355381fcf290b707dc8429723c4c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_if.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "fd61d0526aee176675c7f5acc85f46019fa824bf"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_if.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "a917f6913ab40b0e3b8a43e6375852ff2b8fcc9a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_init.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "ff04efc2b368a31c7c5db3d0015189d4556f2e1a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_init.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "96c1ea6056fd0a811a9b7de2d68aa2d6f45bd942"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_network.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "2954c66a96c889250277e32a38859dff9e12390a"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_pt_network.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "4b68997223b74d7af85c20288fa9fba80196c70b"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_rate_ctrl.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e111d077cbed3db9e3fef4fd6f140b35426515b6"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_rate_ctrl.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e870072a8a74acc9d8d8e9d3658655ddf6d0026c"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_sdio.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "3f79f7b77eec050810daaeb177584313c814c19d"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_sdio.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "e69f556ebfca2123411f5c112cc8998ab7071171"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_share_fifo.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "b4f3bc8f7e5f8863a579412ac868edd6b8e892f5"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_share_fifo.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "f2c44e2a2aaa2c4b69c38b90e94b840d8d3b3b28"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_skbbuf.c",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "5e9e3a9bcceba8e461c95b54031ed7ccc2d8f376"
+    },
+    {
+      "path": "drivers/net/wireless/amlogic/w1/vmac/wifi_skbbuf.h",
+      "change": "A",
+      "group": "wifi-w1",
+      "git_blob": "cc41998d6292a707915e1b8855c5af9f2191f534"
+    },
+    {
+      "path": "firmware/.gitignore",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "69a20c4ca5acbbc157fc1918f5ad79f1c7211800"
+    },
+    {
+      "path": "firmware/aml/aml_wifi_rf.txt",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "35213e294a752ecd7d0d0b61a5ab88ca188a137d"
+    },
+    {
+      "path": "firmware/aml/aml_wifi_rf_0321.txt",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "95bf1ea352233363407bd2d505ee5ec8fc7afbe9"
+    },
+    {
+      "path": "firmware/aml/aml_wifi_rf_ampak.txt",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "aef891997feb12a372e07f2aeaffe83a2c21c2ec"
+    },
+    {
+      "path": "firmware/aml/aml_wifi_rf_fn_link.txt",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "1c3afe20c4012a8ba4d83ca7213bd874513416b9"
+    },
+    {
+      "path": "firmware/aml/aml_wifi_rf_iton.txt",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "caceaec92de723c12f44c8e5db30d0c99e05485c"
+    },
+    {
+      "path": "firmware/aml/w1_bt_fw_uart.bin",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "8c678574837a557449084eff84e916ef57750d0f"
+    },
+    {
+      "path": "firmware/eq_8918.bin",
+      "change": "A",
+      "group": "embedded-firmware-data",
+      "git_blob": "6283dc349622f0f42f0b79670a410aa02063a8d8"
+    },
+    {
+      "path": "sound/soc/codecs/ntp8918.c",
+      "change": "M",
+      "group": "audio-kernel-driver",
+      "git_blob": "92499fb237bb5ace445e5be95706e67d741304ab"
+    },
+    {
+      "path": "sound/soc/meson/axg-pdm.c",
+      "change": "M",
+      "group": "audio-kernel-driver",
+      "git_blob": "46cc8da7143eb3e915f3ce84263e8c2a54a6c806"
+    }
+  ]
+}

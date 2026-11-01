@@ -79,8 +79,26 @@ def validate_target(t: dict) -> None:
         raise ProfileError("UBIFS logical volume exceeds physical partition")
     if t["bootloader"]["mode"] != "retain-vendor":
         raise ProfileError("Unverified bootloader replacement is forbidden")
+    for component, files in t["kernel"].get("runtime_firmware", {}).items():
+        if not NAME.fullmatch(component):
+            raise ProfileError("Invalid firmware component key: " + component)
+        if not isinstance(files, list):
+            raise ProfileError("Driver firmware list must be a list")
+        for filename in files:
+            if (not isinstance(filename, str)
+                    or filename.startswith("/")
+                    or ".." in filename.split("/")
+                    or not re.fullmatch(r"[a-zA-Z0-9_./-]+", filename)):
+                raise ProfileError("Unsafe runtime firmware filename")
     if t["application"]["enabled"]:
         raise ProfileError("Application integration has not been implemented")
+    components = t.get("firmware", {}).get("components")
+    if not isinstance(components, list) or "base" not in components:
+        raise ProfileError("Every device must select the base firmware component")
+    if any(not isinstance(x, str) or not NAME.fullmatch(x) for x in components):
+        raise ProfileError("Invalid firmware component name")
+    if len(set(components)) != len(components):
+        raise ProfileError("Duplicate selected firmware component")
 
 
 def artifact_fits(t: dict, component: str, size: int) -> bool:

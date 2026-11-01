@@ -10,9 +10,9 @@ and flasher projects without changing target contracts.
 
 ## Source layout
 
-- kernel/ — reusable SoC kernel sources, patches and pinned revisions
+- kernel/ — pinned SoC Linux sources and a 246-path author driver/provenance catalog
 - uboot/ — explicit bootloader policy (retain vendor on current board)
-- firmware/alpine/ — Alpine source pins and rootfs package definitions
+- firmware/alpine/ — common Alpine source pins, optional component packages/services, reusable OpenRC configuration
 - builder/ — build engine; devices/ holds each physical model's profile and overlay
 - tools/ — transport, flashing, backup and recovery contracts
 - builder/build.py — source-based kernel/rootfs/UBI image build driver
@@ -79,3 +79,20 @@ pins, NAND boundaries, overlay resolution and image metadata. This is
 not a production-ready or independently hardware-booted image.
 
 See docs/ARCHITECTURE.md for future modularization and safety.
+
+## Source ownership and attribution
+
+The upstream kernel's A113X-specific patches, drivers, DTS, configs and
+Wi-Fi source are tracked in kernel/provenance/comp18man-a113x-delta.json.
+The entire kernel source is fetched by immutable revision rather than
+copied into consumer device profiles.
+
+The original vendor userspace diagnostics and helper binaries are still
+being classified. Hardware-specific clock/display/LED/touch test wrappers
+belong to Builder, generic Wi-Fi provisioning belongs to Firmware, generic
+USB/NAND transport belongs to Tools. Unlicensed executables and personal
+NAND backups are not redistributed.
+
+For a file-by-file audit of the original author's kernel drivers,
+userland helpers and unavailable binary sources, see
+[Author source ownership](docs/AUTHOR_SOURCE_MAPPING.md).

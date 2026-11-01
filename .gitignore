@@ -28,3 +28,11 @@ artifacts/
 *.ubi
 *.cpio
 *.tar.gz
+
+# Closed Amlogic transports / vendor NAND images are not source
+*.exe
+*.dll
+*.raw
+*.img
+*.bin
+*.ko

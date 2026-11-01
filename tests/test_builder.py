@@ -49,7 +49,7 @@ class ProfileTests(unittest.TestCase):
         source = json.loads(
             (ROOT / "builder/devices/capsula-mini-native/profile.json").read_text()
         )
-        self.assertEqual(set(source["kernel"]), {"defconfig", "dtb"})
+        self.assertEqual(set(source["kernel"]), {"defconfig", "dtb", "runtime_firmware"})
         soc = json.loads(
             (ROOT / "kernel/platforms/amlogic-a113x.json").read_text()
         )
@@ -68,8 +68,25 @@ class ProfileTests(unittest.TestCase):
         build_source = (ROOT / "builder/build.py").read_text()
         self.assertIn('ROOT / "builder" / "devices" / t["id"] / "overlay"', build_source)
         self.assertNotIn('ROOT / "targets"', build_source)
-        self.assertNotIn("capsula-mini", (ROOT / "firmware/alpine/packages.txt").read_text())
+        self.assertNotIn("capsula-mini", (ROOT / "firmware/alpine/components.json").read_text())
         self.assertNotIn("capsula-mini", (ROOT / "firmware/alpine/sources.json").read_text())
+
+    def test_kernel_author_source_manifest(self) -> None:
+        record = json.loads(
+            (ROOT / "kernel/provenance/comp18man-a113x-delta.json").read_text()
+        )
+        self.assertEqual(record["file_count"], 246)
+        self.assertEqual(record["source_revision"], self.profile["kernel"]["revision"])
+        self.assertTrue(
+            any(f["path"] == "drivers/auxdisplay/seg-led-class.c"
+                for f in record["files"])
+        )
+
+    def test_invalid_firmware_component_type_is_rejected(self) -> None:
+        changed = copy.deepcopy(self.profile)
+        changed["firmware"]["components"].append({"invalid": "object"})
+        with self.assertRaisesRegex(ProfileError, "Invalid firmware"):
+            validate_target(changed)
 
     def test_vendor_bootloader_is_protected(self) -> None:
         changed = copy.deepcopy(self.profile)
@@ -86,6 +103,14 @@ class ProfileTests(unittest.TestCase):
 class BuildTests(unittest.TestCase):
     def setUp(self) -> None:
         self.profile = load_target("capsula-mini-native")
+
+    @staticmethod
+    def _fake_service_files(root: Path, profile: dict) -> None:
+        for services in build.enabled_services(profile).values():
+            for name in services:
+                p = root / "etc/init.d" / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("#!/sbin/openrc-run\\n")
 
     def test_official_sources_pinned(self) -> None:
         for item in ("minirootfs", "host_apk_static"):
@@ -114,12 +139,43 @@ class BuildTests(unittest.TestCase):
             self.assertIn("ttyGS0", (root / "etc/inittab").read_text())
             self.assertFalse((root / "root/.ssh/authorized_keys").exists())
 
+    def test_components_exclude_optional_firmware(self) -> None:
+        import copy
+        p = copy.deepcopy(self.profile)
+        p["firmware"]["components"] = ["base", "ssh"]
+        packages = build.apk_packages(p)
+        services = build.enabled_services(p)
+        self.assertIn("openssh", packages)
+        self.assertNotIn("bluez", packages)
+        self.assertNotIn("iwd", packages)
+        self.assertNotIn("dnsmasq", packages)
+        self.assertIn("sshd", services["default"])
+        self.assertNotIn("usbgadget", services["boot"])
+
+    def test_unknown_component_fails_closed(self) -> None:
+        import copy
+        p = copy.deepcopy(self.profile)
+        p["firmware"]["components"].append("no-such-firmware")
+        with self.assertRaisesRegex(build.BuildError, "Unknown firmware"):
+            build.apk_packages(p)
+
+    def test_firmware_owns_generic_gadget_and_ssh(self) -> None:
+        common = ROOT / "firmware/alpine/overlay/etc"
+        specific = ROOT / "builder/devices/capsula-mini-native/overlay/etc"
+        self.assertTrue((common / "init.d/usbgadget").is_file())
+        self.assertTrue((common / "ssh/sshd_config.d/10-audio-module.conf").is_file())
+        self.assertFalse((specific / "init.d/usbgadget").exists())
+        self.assertFalse((specific / "ssh/sshd_config.d/10-audio-module.conf").exists())
+        self.assertTrue((specific / "conf.d/usbgadget").is_file())
+        self.assertNotIn("Capsula", (common / "init.d/usbgadget").read_text())
+
     def test_public_key_injection(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "rootfs"
             root.mkdir()
             public = Path(td) / "test.pub"
             public.write_text("ssh-ed25519 " + "a" * 50 + " test-only\n")
+            self._fake_service_files(root, self.profile)
             links = patch.object(Path, "symlink_to") if os.name == "nt" else nullcontext()
             with links:
                 build.apply_overlay(self.profile, root, public)
@@ -140,6 +196,42 @@ class BuildTests(unittest.TestCase):
             self.assertFalse(data["application_included"])
             self.assertEqual(data["artifacts"]["Image"]["sha256"],
                              hashlib.sha256((images / "Image").read_bytes()).hexdigest())
+
+    def test_firmware_blob_selection_follows_optional_components(self) -> None:
+        import copy
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            kernel = root / "kernel"
+            image = root / "rootfs"
+            for component, files in self.profile["kernel"]["runtime_firmware"].items():
+                for name in files:
+                    p = kernel / "firmware" / name
+                    p.parent.mkdir(parents=True, exist_ok=True)
+                    p.write_bytes(("test-" + component).encode())
+            p = copy.deepcopy(self.profile)
+            p["firmware"]["components"] = ["base", "ssh", "audio"]
+            validate_target(p)
+            build.stage_driver_firmware(p, kernel, image)
+            self.assertTrue((image / "lib/firmware/eq_8918.bin").is_file())
+            self.assertFalse((image / "lib/firmware/aml/aml_wifi_rf_fn_link.txt").exists())
+
+    def test_firmware_blob_traversal_rejected(self) -> None:
+        import copy
+        p = copy.deepcopy(self.profile)
+        p["kernel"]["runtime_firmware"]["audio"] = ["../user-keys"]
+        with self.assertRaisesRegex(ProfileError, "Unsafe runtime firmware"):
+            validate_target(p)
+
+    def test_historical_flash_executable_is_quarantined(self) -> None:
+        import subprocess
+        for name in ("alpine_flash_windows.py", "raw_backup.py"):
+            tool = (ROOT / "tools/amlogic/worldcup/windows/legacy" / name)
+            result = subprocess.run(
+                [sys.executable, str(tool)],
+                capture_output=True, text=True, timeout=5, check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("LEGACY REFERENCE DISABLED", result.stderr)
 
     def test_empty_application_is_not_added(self) -> None:
         self.assertEqual(self.profile["application"]["enabled"], False)

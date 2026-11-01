@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "components": {
+    "base": {
+      "packages": [
+        "alpine-base",
+        "busybox",
+        "ca-certificates",
+        "iproute2",
+        "ifupdown-ng",
+        "kmod"
+      ],
+      "services": {
+        "sysinit": [
+          "devfs",
+          "dmesg",
+          "mdev",
+          "hwdrivers"
+        ],
+        "boot": [
+          "modules",
+          "hostname",
+          "networking"
+        ]
+      }
+    },
+    "ssh": {
+      "packages": [
+        "openssh",
+        "shadow"
+      ],
+      "services": {
+        "default": [
+          "sshd"
+        ]
+      }
+    },
+    "usb-network": {
+      "packages": [
+        "dnsmasq"
+      ],
+      "services": {
+        "boot": [
+          "usbgadget"
+        ],
+        "default": [
+          "dnsmasq"
+        ]
+      }
+    },
+    "wifi": {
+      "packages": [
+        "iw",
+        "iwd",
+        "wireless-regdb",
+        "dbus"
+      ],
+      "services": {
+        "boot": [
+          "dbus",
+          "iwd"
+        ]
+      }
+    },
+    "bluetooth": {
+      "packages": [
+        "bluez",
+        "bluez-openrc",
+        "bluez-alsa",
+        "bluez-alsa-openrc",
+        "dbus"
+      ],
+      "services": {
+        "boot": [
+          "dbus"
+        ],
+        "default": [
+          "bluetooth",
+          "bluealsa"
+        ]
+      }
+    },
+    "audio": {
+      "packages": [
+        "alsa-utils"
+      ],
+      "services": {
+        "default": [
+          "alsa"
+        ]
+      }
+    },
+    "time": {
+      "packages": [
+        "chrony"
+      ],
+      "services": {
+        "default": [
+          "chronyd"
+        ]
+      }
+    },
+    "diagnostics": {
+      "packages": [
+        "bash",
+        "ethtool",
+        "evtest",
+        "i2c-tools",
+        "iputils",
+        "libgpiod",
+        "mtd-utils-ubi",
+        "usbutils",
+        "zram-init"
+      ],
+      "services": {
+        "default": [
+          "zram-init"
+        ]
+      }
+    }
+  }
+}

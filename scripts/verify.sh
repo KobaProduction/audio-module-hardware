@@ -10,14 +10,16 @@ git diff --check --cached
 # Reject secret / device-dump paths even if someone force-adds them.
 git ls-files --cached --others --exclude-standard | while IFS= read -r path; do
     case "$path" in
-       *.pem|*.key|*.ppk|*.raw.bin|*/backups/*|backups/*|*/device-dumps/*|device-dumps/*|*/.env|.env)
+       *.pem|*.key|*.ppk|*.exe|*.dll|*.raw.bin|*/backups/*|backups/*|*/device-dumps/*|device-dumps/*|*/.env|.env)
            echo "Private artifact cannot be tracked: $path" >&2; exit 1 ;;
     esac
 done
 python3 -m compileall -q builder scripts tests
 python3 -m unittest discover -s tests -v
+# Windows source tests are offline mocks and run cross-platform.
+python3 -m unittest discover -s tools/amlogic/worldcup/windows -p 'test_*.py' -v
 python3 -m builder.build plan >/dev/null
 sh -n scripts/verify.sh
 sh -n .githooks/pre-push
-sh -n builder/devices/capsula-mini-native/overlay/etc/init.d/usbgadget
+sh -n firmware/alpine/overlay/etc/init.d/usbgadget
 echo "Hardware source and profile verification passed."

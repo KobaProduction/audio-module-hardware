@@ -15,3 +15,13 @@ From repository root, the read-only build plan is:
 
 Builder never flashes a physical device. When needed, this whole directory
 can be extracted into its own repository without moving individual devices.
+
+## Reusable firmware-component selection
+
+The device profile firmware.components list selects shared components from
+firmware/alpine/components.json (Alpine APK packages and OpenRC services).
+For example, removing bluetooth from a device profile removes the Bluetooth
+package set and service startup from that device build without changing the
+common firmware source. Removing wifi removes iwd and wireless-regdb. A
+device cannot omit base. The local firmware packages are resolved by apk
+from the Alpine repository: exact package revisions are not yet locked.

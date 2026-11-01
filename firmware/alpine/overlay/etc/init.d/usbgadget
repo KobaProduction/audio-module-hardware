@@ -1,5 +1,6 @@
 #!/sbin/openrc-run
-description="Audio Module USB-C gadget (Windows NCM network plus ACM console)"
+# Generic Linux USB NCM+ACM gadget. Identity supplied by conf.d.
+description="Audio Module USB NCM/ACM gadget"
 
 depend() {
     need sysfs
@@ -7,13 +8,16 @@ depend() {
 }
 
 start() {
-    ebegin "Starting Audio Module USB gadget"
-    local g="/sys/kernel/config/usb_gadget/audio_module"
-    local controller
+    ebegin "Starting USB NCM and serial gadget"
+    local controller g
+    g="/sys/kernel/config/usb_gadget/audio_module"
     [ -d /sys/kernel/config/usb_gadget ] || { eend 1; return 1; }
     controller="$(ls /sys/class/udc 2>/dev/null | head -n 1)"
     [ -n "$controller" ] || { eend 1; return 1; }
-    mkdir -p "$g" "$g/strings/0x409" "$g/configs/c.1/strings/0x409"
+    if [ -z "$gadget_manufacturer" ] || [ -z "$gadget_product" ] || [ -z "$gadget_serial" ] || [ -z "$gadget_dev_mac" ] || [ -z "$gadget_host_mac" ]; then
+        eend 1 "Missing required device gadget identity"; return 1
+    fi
+    mkdir -p "$g"
     cd "$g" || { eend 1; return 1; }
     echo 0x1d6b > idVendor
     echo 0x0104 > idProduct
@@ -22,19 +26,19 @@ start() {
     echo 0xef > bDeviceClass
     echo 0x02 > bDeviceSubClass
     echo 0x01 > bDeviceProtocol
-    echo "Koba Audio Module" > strings/0x409/manufacturer
-    echo "Capsula Mini" > strings/0x409/product
-    # A unique serial per device must be provisioned before multi-device rollout.
-    echo "capsula-mini-unprovisioned" > strings/0x409/serialnumber
-    echo "NCM + USB serial" > configs/c.1/strings/0x409/configuration
+    mkdir -p strings/0x409 configs/c.1/strings/0x409
+    echo "$gadget_manufacturer" > strings/0x409/manufacturer
+    echo "$gadget_product" > strings/0x409/product
+    echo "$gadget_serial" > strings/0x409/serialnumber
+    echo "NCM + ACM" > configs/c.1/strings/0x409/configuration
     echo 250 > configs/c.1/MaxPower
     if [ ! -d functions/ncm.usb0 ]; then
         mkdir functions/ncm.usb0
-        echo "02:1a:11:00:00:01" > functions/ncm.usb0/dev_addr
-        echo "02:1a:11:00:00:02" > functions/ncm.usb0/host_addr
+        echo "$gadget_dev_mac" > functions/ncm.usb0/dev_addr
+        echo "$gadget_host_mac" > functions/ncm.usb0/host_addr
     fi
-    mkdir -p functions/acm.gs0
     echo WINNCM > functions/ncm.usb0/os_desc/interface.ncm/compatible_id
+    mkdir -p functions/acm.gs0
     echo 1 > os_desc/use
     echo 0xcd > os_desc/b_vendor_code
     echo MSFT100 > os_desc/qw_sign
@@ -47,10 +51,8 @@ start() {
 }
 
 stop() {
-    ebegin "Stopping Audio Module USB gadget"
+    ebegin "Stopping USB gadget"
     local g="/sys/kernel/config/usb_gadget/audio_module"
-    if [ -e "$g/UDC" ]; then
-        echo "" > "$g/UDC" 2>/dev/null || true
-    fi
+    [ -e "$g/UDC" ] && echo "" > "$g/UDC" || true
     eend 0
 }

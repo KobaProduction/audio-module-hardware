@@ -122,15 +122,37 @@ def checked_tar_extract(archive: Path, rootfs: Path) -> None:
     checked(["tar", "--numeric-owner", "-xzf", str(archive), "-C", str(rootfs)])
 
 
-def apk_packages() -> list[str]:
-    packages = []
-    for line in (ROOT / "firmware/alpine/packages.txt").read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            if not line.replace("-", "").replace("_", "").isalnum():
+def selected_components(t: dict) -> list[dict]:
+    source = ROOT / "firmware/alpine/components.json"
+    data = json.loads(source.read_text(encoding="utf-8"))
+    if data.get("schema") != 1:
+        raise BuildError("Unknown firmware component manifest schema")
+    catalog = data["components"]
+    requested = t["firmware"]["components"]
+    unknown = set(requested) - set(catalog)
+    if unknown:
+        raise BuildError("Unknown firmware components: " + ", ".join(sorted(unknown)))
+    return [catalog[name] for name in requested]
+
+
+def apk_packages(t: dict) -> list[str]:
+    names: set[str] = set()
+    for component in selected_components(t):
+        for package in component["packages"]:
+            if not package or not package.replace("-", "").replace("_", "").isalnum():
                 raise BuildError("Invalid Alpine package name")
-            packages.append(line)
-    return packages
+            names.add(package)
+    return sorted(names)
+
+
+def enabled_services(t: dict) -> dict[str, list[str]]:
+    services: dict[str, set[str]] = {}
+    for component in selected_components(t):
+        for level, names in component.get("services", {}).items():
+            if level not in ("sysinit", "boot", "default"):
+                raise BuildError("Unsupported OpenRC runlevel")
+            services.setdefault(level, set()).update(names)
+    return {level: sorted(names) for level, names in services.items()}
 
 
 def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
@@ -152,7 +174,7 @@ def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
     # apk.static executes natively on x86_64, but installs aarch64 packages.
     # No foreign-architecture post-install script is executed during staging.
     checked([str(apk), "--root", str(rootfs), "--arch", t["architecture"],
-             "--no-scripts", "--update-cache", "add", *apk_packages()])
+             "--no-scripts", "--update-cache", "add", *apk_packages(t)])
     apply_overlay(t, rootfs, authorized_key)
     print("ROOTFS_STAGED", rootfs)
 
@@ -188,19 +210,33 @@ def apply_overlay(t: dict, rootfs: Path, authorized_key: Path | None) -> None:
         (ssh / "authorized_keys").write_text(content + "\n")
         (ssh / "authorized_keys").chmod(0o600)
     # Enable only services that are installed and required for early access.
-    for service,level in (("devfs","sysinit"),("dmesg","sysinit"),
-                          ("mdev","sysinit"),("hwdrivers","sysinit"),
-                          ("modules","boot"),("hostname","boot"),
-                          ("networking","boot"),("usbgadget","boot"),
-                          ("sshd","default"),("dnsmasq","default"),("dbus","boot"),
-                          ("iwd","default"),("alsa","default")):
-        definition = rootfs / "etc/init.d" / service
-        if definition.is_file():
-            enabled = rootfs / "etc/runlevels" / level
-            enabled.mkdir(parents=True, exist_ok=True)
-            link = enabled / service
+    enabled = enabled_services(t)
+    for level, names in enabled.items():
+        for service in names:
+            definition = rootfs / "etc/init.d" / service
+            if not definition.is_file():
+                raise BuildError("Selected service not installed: " + service)
+            runlevel = rootfs / "etc/runlevels" / level
+            runlevel.mkdir(parents=True, exist_ok=True)
+            link = runlevel / service
             if not link.exists() and not link.is_symlink():
                 link.symlink_to("../../init.d/" + service)
+
+
+def stage_driver_firmware(t: dict, kernel_source: Path, rootfs: Path) -> None:
+    enabled = set(t["firmware"]["components"])
+    for component, names in t["kernel"].get("runtime_firmware", {}).items():
+        if component not in enabled:
+            continue
+        for filename in names:
+            if filename.startswith("/") or ".." in Path(filename).parts:
+                raise BuildError("Unsafe runtime firmware filename")
+            source = kernel_source / "firmware" / filename
+            if not source.is_file():
+                raise BuildError("Missing selected device firmware: " + filename)
+            target = rootfs / "lib/firmware" / filename
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
 
 
 def pack_images(t: dict, work: Path) -> None:
@@ -217,16 +253,9 @@ def pack_images(t: dict, work: Path) -> None:
         raise BuildError("Built kernel is needed to install matching modules")
     if not (rootfs / "root/.ssh/authorized_keys").is_file():
         raise BuildError("Refusing unreachable rootfs: provision a PUBLIC SSH key at rootfs stage")
-    # Device calibration is never copied from the factory NAND; redistributable
-    # firmware blobs require individual license checks before distribution.
-    vendor_firmware = ("aml/aml_wifi_rf_fn_link.txt", "aml/aml_wifi_rf.txt", "eq_8918.bin")
-    for filename in vendor_firmware:
-        source_blob = src / "firmware" / filename
-        if not source_blob.is_file():
-            raise BuildError("Needed device firmware missing in kernel source: " + filename)
-        dest_blob = rootfs / "lib/firmware" / filename
-        dest_blob.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source_blob, dest_blob)
+    # Device selects driver firmware per enabled component. Never vendor
+    # calibration/key blobs or enable disabled peripherals implicitly.
+    stage_driver_firmware(t, src, rootfs)
     checked(["make", "-C", str(src), "O=" + str(out), "ARCH=arm64",
              "CROSS_COMPILE=aarch64-linux-gnu-", "INSTALL_MOD_PATH=" + str(rootfs),
              "modules_install"])
@@ -278,9 +307,10 @@ def package_manifest(t: dict, work: Path) -> None:
 
 
 def plan(t: dict, work: Path) -> None:
-    packages = apk_packages()
+    packages = apk_packages(t)
     summary = {"id": t["id"], "soc": t["soc"], "kernel_sha": t["kernel"]["revision"],
                "alpine": t["os"]["release"], "packages": len(packages),
+               "components": t["firmware"]["components"],
                "protected_nand": [0, t["nand"]["protected_until"]],
                "rootfs": "Alpine minirootfs + signed APK packages + overlay",
                "application_included": False, "bootloader_rebuild": False,

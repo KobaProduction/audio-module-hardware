@@ -7,7 +7,16 @@
   "architecture": "aarch64",
   "kernel": {
     "defconfig": "marusia_mini_defconfig",
-    "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb"
+    "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb",
+    "runtime_firmware": {
+      "wifi": [
+        "aml/aml_wifi_rf_fn_link.txt",
+        "aml/aml_wifi_rf.txt"
+      ],
+      "audio": [
+        "eq_8918.bin"
+      ]
+    }
   },
   "os": {
     "distribution": "alpine",
@@ -35,5 +44,17 @@
     "enabled": false,
     "reason": "audio-module-application has not been implemented yet"
   },
-  "status": "experimental-build-unverified"
+  "status": "experimental-build-unverified",
+  "firmware": {
+    "components": [
+      "base",
+      "ssh",
+      "usb-network",
+      "wifi",
+      "bluetooth",
+      "audio",
+      "time",
+      "diagnostics"
+    ]
+  }
 }

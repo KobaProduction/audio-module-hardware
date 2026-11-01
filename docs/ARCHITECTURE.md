@@ -90,3 +90,15 @@ Before adding another device, reuse the same SoC platform pin when possible.
 Do not copy kernel source commits or Alpine rootfs recipes between device
 profiles. A future repository split can take builder/ (including devices/)
 without migrating the hardware profiles out of firmware internals.
+
+## Firmware optionality contract
+
+Firmware owns a manifest of reusable Alpine components and services
+(firmware/alpine/components.json). Builder device profiles select
+components and carry only actual board overrides. Missing components
+are not installed or enabled. Firmware must never hard-code consumer
+model GPIO, display interfaces, gadget MAC addresses or NAND offsets.
+
+Original author source classification is documented in
+docs/AUTHOR_SOURCE_MAPPING.md; avoid importing binary executables or
+private factory backups into source Git.
