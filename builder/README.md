@@ -55,3 +55,23 @@ The read-only storage-plan command checks MTD order and UBI space policy and nev
 changes the NAND or image builder. The active layout is explicitly
 legacy-single-ubifs; activating a future layout without validating a
 new early-init boot contract is forbidden.
+
+## Offline input attestation (not a package lock)
+
+The ordinary `plan` phase reports a SHA256 fingerprint of selected build
+inputs and states `alpine_package_versions_locked=false`. This hashes the
+pinned Alpine source/SoC/device declarations, relevant Builder/HAL/persistence
+code, and generic + selected device overlays (including executable modes).
+It does not read user-supplied SSH provisioning keys or private factory dumps.
+
+After a successful `rootfs` stage, Builder stores `build-inputs.json` only
+in its untracked work directory. It captures the exact Alpine installed-db
+package names/versions and records the source-input fingerprint. `image`
+checks that the source inputs and installed-db are unchanged **before** any
+module installation or UBI packaging. The emitted image manifest includes
+the source fingerprint and observed package versions, not credentials.
+
+The Alpine APK repository branches remain mutable, so even matching source
+fingerprints do **not** guarantee that a future build resolves identical
+packages. This is a provenance/drift guard, not a reproducible distribution
+lock, nor any authorization to install firmware on hardware.

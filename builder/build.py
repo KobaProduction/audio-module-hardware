@@ -16,6 +16,9 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
+from builder.input_attestation import (  # noqa: E402
+    InputAttestationError, build_inputs, capture_stage, verify_stage,
+)
 from hal.manifest import CapabilityError, compile_manifest, write_manifest  # noqa: E402
 from firmware.updates.persistence import plan as persistence_plan  # noqa: E402
 from builder.storage import (  # noqa: E402
@@ -172,6 +175,7 @@ def enabled_services(t: dict) -> dict[str, list[str]]:
 def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
     if os.geteuid() != 0:
         raise BuildError("Root privileges are required to preserve ownership and package files")
+    input_before = build_inputs(t)
     cache = work / "downloads"
     mini = verified_fetch(SOURCES["minirootfs"], cache / "alpine-minirootfs.tar.gz")
     apk = verified_fetch(SOURCES["host_apk_static"], cache / "apk.static")
@@ -191,6 +195,10 @@ def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
              "--no-scripts", "--update-cache", "add", *apk_packages(t)])
     apply_overlay(t, rootfs, authorized_key)
     print("HAL_DESCRIPTOR_STAGED", write_manifest(t, rootfs))
+    if build_inputs(t) != input_before:
+        raise InputAttestationError("Build inputs changed while staging rootfs")
+    record = capture_stage(t, work, rootfs)
+    print("ROOTFS_INPUT_ATTESTED", record["source_inputs"]["sha256"])
     print("ROOTFS_STAGED", rootfs)
 
 
@@ -255,11 +263,12 @@ def stage_driver_firmware(t: dict, kernel_source: Path, rootfs: Path) -> None:
 
 
 def pack_images(t: dict, work: Path) -> None:
-    if not shutil.which("mkfs.ubifs") or not shutil.which("ubinize"):
-        raise BuildError("mtd-utils: mkfs.ubifs and ubinize are required")
     rootfs = work / "rootfs"
     if not rootfs.is_dir():
         raise BuildError("Rootfs stage missing")
+    verify_stage(t, work, rootfs)
+    if not shutil.which("mkfs.ubifs") or not shutil.which("ubinize"):
+        raise BuildError("mtd-utils: mkfs.ubifs and ubinize are required")
     if os.geteuid() != 0:
         raise BuildError("Root required to package rootfs with correct ownership")
     src = work / "kernel-src"
@@ -295,7 +304,13 @@ def package_manifest(t: dict, work: Path) -> None:
     artifacts = work / "images"
     files = [("Image","Image"), ("board.dtb","dtb"), ("rootfs.ubi","ubi")]
     hal_descriptor = compile_manifest(t)
+    provenance = verify_stage(t, work, work / "rootfs")
     output: dict = {"schema": 1, "target": t["id"], "status": "NOT_HARDWARE_VALIDATED",
+                    "build_input_attestation": {
+                        "source_inputs": provenance["source_inputs"],
+                        "alpine_package_versions_locked": False,
+                        "resolved_packages": provenance["resolved_packages"],
+                    },
                     "application_included": False, "bootloader": "retain-vendor",
                     "kernel_revision": t["kernel"]["revision"],
                     "hal_abi_major": hal_descriptor["version"],
@@ -346,6 +361,8 @@ def plan(t: dict, work: Path) -> None:
     summary = {"id": t["id"], "soc": t["soc"], "kernel_sha": t["kernel"]["revision"],
                "alpine": t["os"]["release"], "packages": len(packages),
                "components": t["firmware"]["components"],
+               "source_inputs": build_inputs(t),
+               "alpine_package_versions_locked": False,
                "hal_abi": descriptor["version"],
                "capabilities_declared": len(descriptor["capabilities"]),
                "protected_nand": [0, t["nand"]["protected_until"]],
@@ -398,7 +415,7 @@ def main() -> int:
             stage_rootfs(t, work, args.authorized_key_file)
             pack_images(t, work)
         return 0
-    except (BuildError, ProfileError, StoragePlanError,
+    except (BuildError, ProfileError, StoragePlanError, InputAttestationError,
             CapabilityError, KernelConfigurationError,
             OSError, subprocess.CalledProcessError,
             ValueError, KeyError) as exc:
