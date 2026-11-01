@@ -65,8 +65,7 @@ Before allowing writes:
 6. Establish and hardware-test bootable recovery, UBI bad-block handling
    and power-loss behavior before calling any update safe.
 
-In the future, separate rootfs, immutable identity and user-data volumes
-or partitions may be preferable. Repartitioning or re-creating UBI
+In the future, separate rootfs and user-data volumes may be preferable. Factory identity should remain in the verified protected U-Boot/factory source. Repartitioning or re-creating UBI
 volumes is destructive and MUST NOT be done on the working speaker
 without separate hardware acceptance.
 
@@ -84,10 +83,9 @@ This is SOURCE VALIDATION, not proof of operational persistence.
 ## Future storage split (not yet active)
 
 Builder/devices/capsula-mini-native/storage.json contains a planned
-physical identity-before-kernel and two-volume UBI layout. System updates would replace only the
+unchanged protected factory/kernel MTD and two-volume UBI layout. System updates would replace only the
 read-only rootfs volume; a persistent rootfs_data OverlayFS layer
-would keep user configuration, while the protected physical identity MTD
-partition would survive clean install and factory reset. The existing device has
+would keep user configuration, while existing reserved U-Boot Environment and factory identity would survive clean install and factory reset. The existing device has
 none of these separate volumes; all current update/reset write paths
 remain blocked until a verified migration and recovery path exists.
 See docs/STORAGE_LAYOUT.md.

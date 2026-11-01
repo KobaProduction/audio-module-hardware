@@ -13,16 +13,15 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 FLAG_KEYS = (
-    "bootloader_relocation_verified", "kernel_dtb_offsets_verified",
-    "identity_format_provisioning_implemented", "early_init_implemented",
+    "factory_identity_source_validated_for_runtime", "early_init_implemented",
     "boot_pivot_verified", "volume_migration_implemented",
     "update_rootfs_only_implemented", "recovery_validated",
 )
 BOOT_CHAIN = ("bootloader", "reserved", "tpl", "misc")
-ORDER = BOOT_CHAIN + ("identity", "kernel", "dtb", "ubi")
+ORDER = BOOT_CHAIN + ("kernel", "dtb", "ubi")
 ROLES = (
     "boot-chain", "factory-reserved", "boot-chain", "boot-chain",
-    "device-identity", "kernel", "kernel-description", "system-and-data",
+    "kernel", "kernel-description", "system-and-data",
 )
 
 
@@ -67,7 +66,7 @@ class StoragePlan:
     rootfs_data_autoresize_to_end: bool
     rootfs_data_exact_lebs: None
     fixed_unused_tail_lebs: int
-    identity_storage_format: str
+    identity_source: str
     overlay_filesystem: str
     alternative_squashfs_status: str
     may_install: bool
@@ -91,7 +90,7 @@ def _validate_physical_partitions(target: dict, proposal: dict) -> tuple[Physica
     if (proposal.get("physical_partition_policy") != "explicit-mtd"
             or not isinstance(parts, list) or len(parts) != len(ORDER)
             or [p.get("name") for p in parts if isinstance(p, dict)] != list(ORDER)):
-        raise StoragePlanError("Physical NAND order must be boot, identity, kernel, dtb, ubi")
+        raise StoragePlanError("Physical NAND order must keep original boot, kernel, dtb, ubi")
     nand = target["nand"]
     erase = nand["erase_block_bytes"]
     previous_end = 0
@@ -103,9 +102,9 @@ def _validate_physical_partitions(target: dict, proposal: dict) -> tuple[Physica
         if (type(offset) is not int or type(size) is not int
                 or offset != previous_end or size <= 0 or offset % erase or size % erase):
             raise StoragePlanError("MTD ranges must be contiguous and eraseblock-aligned")
-        preserved = name in BOOT_CHAIN or name == "identity"
+        preserved = name in BOOT_CHAIN
         if part.get("role") != role or part.get("preserve_always") is not preserved:
-            raise StoragePlanError("Factory/identity/firmware write policy mismatch")
+            raise StoragePlanError("Factory/firmware write policy mismatch")
         if name in BOOT_CHAIN:
             expected_sizes = {
                 "bootloader": 2097152, "reserved": 6291456,
@@ -113,11 +112,6 @@ def _validate_physical_partitions(target: dict, proposal: dict) -> tuple[Physica
             }
             if size != expected_sizes[name]:
                 raise StoragePlanError("Protected original boot-chain partition changed")
-        if name == "identity":
-            if (offset != nand["protected_until"]
-                    or part.get("format") != "unselected"
-                    or part.get("provisioning_verified") is not False):
-                raise StoragePlanError("Unverified identity partition or data format")
         if name == "kernel" and size != nand["dtb_offset"] - nand["kernel_offset"]:
             raise StoragePlanError("Proposed kernel slot size changed")
         if name == "dtb" and size != nand["ubi_offset"] - nand["dtb_offset"]:
@@ -125,9 +119,9 @@ def _validate_physical_partitions(target: dict, proposal: dict) -> tuple[Physica
         previous_end = offset + size
         mapped.append(PhysicalPartition(name, offset, size, role, preserved))
     if previous_end != nand["total_bytes"]:
-        raise StoragePlanError("Last RootFS Data container must extend to physical NAND end")
-    if mapped[-1].offset_bytes <= nand["ubi_offset"]:
-        raise StoragePlanError("Expected relocated UBI start after new identity")
+        raise StoragePlanError("Final UBI partition must extend to physical NAND end")
+    if mapped[-1].offset_bytes != nand["ubi_offset"]:
+        raise StoragePlanError("Existing UBI start must remain unchanged")
     return tuple(mapped)
 
 
@@ -179,7 +173,7 @@ def _validate_ubi(proposal: dict, target: dict, partition: PhysicalPartition) ->
 
 def plan_storage(target: dict, *, document: dict | None = None) -> StoragePlan:
     d = load_storage_layout(target) if document is None else document
-    if (not isinstance(d, dict) or d.get("schema") != 2
+    if (not isinstance(d, dict) or d.get("schema") != 3
             or d.get("device") != target["id"] or d.get("state") != "design-only"):
         raise StoragePlanError("Unsupported or activated storage design")
     original = d["current"]
@@ -193,7 +187,7 @@ def plan_storage(target: dict, *, document: dict | None = None) -> StoragePlan:
             or original.get("writable_root") is not True):
         raise StoragePlanError("Current NAND evidence does not match legacy root")
     proposed = d["candidate"]
-    if (proposed.get("layout") != "boot-identity-kernel-rootfs-data"
+    if (proposed.get("layout") != "protected-factory-kernel-ubi-overlay"
             or proposed.get("kernel_boot_root") != original["boot_root"]
             or proposed.get("base_filesystem") != "ubifs"
             or proposed.get("overlay_filesystem") != "overlayfs"
@@ -209,10 +203,26 @@ def plan_storage(target: dict, *, document: dict | None = None) -> StoragePlan:
     if mounts != {
         "lower": "/rom", "merged": "/", "data": "/overlay",
         "upper": "/overlay/upper", "work": "/overlay/work",
-        "identity": "/identity",
     }:
         raise StoragePlanError("Incorrect OverlayFS mount boundaries")
     physical = _validate_physical_partitions(target, proposed)
+    ident = proposed.get("identity_source")
+    if (not isinstance(ident, dict)
+            or ident.get("kind") != "read-only-uboot-environment-and-factory"
+            or ident.get("existing_partition") != "reserved"
+            or ident.get("uboot_environment_offsets_in_reserved") != [1048576,1179648]
+            or ident.get("environment_block_bytes") != 65536
+            or ident.get("crc32_valid_copies_observed") != 2
+            or ident.get("identifier_key_names") != ["serial","ethaddr"]
+            or ident.get("serial_present_in_one_verified_copy") is not True
+            or ident.get("ethaddr_copy_values_disagree") is not True
+            or ident.get("postflash_environment_matches_one_mac_copy") is not True
+            or ident.get("active_copy_selected_by_bootloader_verified") is not False
+            or ident.get("factory_keys_calibration_preserved_in_place") is not True
+            or ident.get("allow_uboot_environment_writes") is not False
+            or ident.get("dedicated_identity_partition_required") is not False
+            or ident.get("identity_values_in_repository") is not False):
+        raise StoragePlanError("U-Boot environment identity evidence or safety policy mismatch")
     volumes = _validate_ubi(proposed, target, physical[-1])
     alt = d["alternative"]
     if (alt.get("layout") != "squashfs-on-ubiblock"
@@ -231,14 +241,14 @@ def plan_storage(target: dict, *, document: dict | None = None) -> StoragePlan:
         rootfs_data_autoresize_to_end=True,
         rootfs_data_exact_lebs=None,
         fixed_unused_tail_lebs=0,
-        identity_storage_format="unselected",
+        identity_source="existing-protected-uboot-env-with-mac-copy-conflict",
         overlay_filesystem="overlayfs",
         alternative_squashfs_status="research-only",
         may_install=False, may_switch_boot=False,
         blockers=(
-            "identity-partition-is-a-proposal-not-found-on-current-device",
-            "bootloader-kernel-and-dtb-relocated-offsets-not-validated",
-            "factory-identity-source-and-format-unverified",
+            "redundant-uboot-ethaddr-values-conflict",
+            "uboot-active-environment-copy-not-verified",
+            "factory-identity-readonly-provider-not-implemented",
             "rootfs-data-exact-capacity-requires-ubi-attach-and-actual-image",
             "early-overlay-init-and-pivot-unimplemented",
             "offline-backup-migration-and-recovery-unvalidated",

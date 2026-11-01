@@ -82,7 +82,7 @@ enabled by the current code.
 ## Future per-volume image updates
 
 The system layer will ultimately be mounted read-only and changes kept
-in rootfs_data (UBIFS/OverlayFS), with a separately provisioned physical identity MTD partition before kernel. Only a proven rootfs-volume-specific updater may replace the
+in rootfs_data (UBIFS/OverlayFS), with existing protected U-Boot Environment and reserved factory identity. Only a proven rootfs-volume-specific updater may replace the
 OS. The existing rootfs.ubi generated for the legacy single-volume
 configuration is not a safe multi-volume OTA artifact, since writing
 a whole UBI partition would erase the overlay and identity. All

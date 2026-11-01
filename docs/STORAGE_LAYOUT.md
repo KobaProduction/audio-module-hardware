@@ -1,132 +1,95 @@
-# Physical NAND and logical UBI storage architecture
+# Capsula Mini storage contract: preserve factory identity in place
 
-## Requested physical order
+## Verified read-only evidence, 2026-11-01
 
-Future new-install layout:
+The existing NAND reserved MTD area already contains U-Boot Environment.
+Two CRC32-valid environment blocks were found in the running 6 MiB
+reserved partition at relative offsets 1048576 and 1179648, with a
+64 KiB environment block size. The serial key agrees with a previously
+captured U-Boot console environment. Both copies of ethaddr are valid
+but contain DIFFERENT MAC values; one matches the post-flash console
+capture. We must determine which copy U-Boot actively selects before
+using a factory MAC automatically.
 
-    U-Boot / boot-chain (existing bootloader, reserved, tpl, misc)
-    Identity (separate protected MTD partition)
-    Kernel and its separate DTB slot
-    UBI partition to physical NAND end:
-      rootfs       (read-only UBIFS, image-sized)
-      rootfs_data  (writable UBIFS OverlayFS, autoresize remainder)
+Unique values, factory keys, bootloader, BBT and calibration remain
+in private original backup files plus an additional encrypted local
+custody archive. No identifier values belong in public source Git.
 
-The UBI rootfs and rootfs_data are LOGICAL wear-levelled volumes, not
-contiguous fixed physical offsets. Rootfs Data "fills to the end"
-by claiming all remaining UBI-available volume blocks at initialization.
-No additional fixed tail reserve is allocated. UBI itself retains
-bad-block/wear-levelling reserves, which must not be disabled.
-
-Identity is a protected PHYSICAL MTD partition between the boot chain
-and Kernel, not a third UBI volume after rootfs_data. Its storage format
-and provisioned serial source are still UNKNOWN. Until decided, an MTD
-partition is not automatically mountable under /identity.
-
-## Actual physical state (256 MiB NAND, do NOT reflash)
-
-| MTD | Start MiB | Size MiB |
-| --- | ---: | ---: |
-| bootloader | 0 | 2 |
-| reserved | 2 | 6 |
-| tpl | 8 | 8 |
-| misc | 16 | 2 |
-| kernel | 18 | 25 |
-| dtb | 43 | 1 |
-| ubi | 44 | 212 |
-
-Actual UBI contains only one writable UBIFS rootfs, 1652 LEB of 126976
-bytes each, no free volume LEBs and two known bad physical eraseblocks.
-Boot chain and factory protected regions (first 18 MiB) must not be
-changed without independent recovery validation.
-
-## Proposed MTD candidate (NOT HARDWARE VERIFIED)
+## Physical MTD: unchanged vendor-compatible partitions
 
 | MTD | Start MiB | Size MiB | Policy |
 | --- | ---: | ---: | --- |
-| bootloader | 0 | 2 | Preserve |
-| reserved | 2 | 6 | Preserve |
-| tpl | 8 | 8 | Preserve |
-| misc | 16 | 2 | Preserve |
-| identity | 18 | 2 tentative | Preserve even during clean install |
-| kernel | 20 | 25 | New kernel location |
-| dtb | 45 | 1 | New DTB location |
-| ubi | 46 | 210 | Last partition, to physical end (256 MiB) |
+| bootloader | 0 | 2 | Protected |
+| reserved | 2 | 6 | Protected: env, keys, BBT, calibration |
+| tpl | 8 | 8 | Protected |
+| misc | 16 | 2 | Protected |
+| kernel | 18 | 25 | Retain original address |
+| dtb | 43 | 1 | Retain original address |
+| ubi | 44 | 212 | Last MTD partition, to NAND end |
 
-Inside the final 210 MiB UBI MTD:
-- rootfs (volume ID 0): immutable UBIFS base, sized to produced image
-  with initial engineering cap 1024 LEB (~124 MiB).
-- rootfs_data (volume ID 1): UBIFS with autoresize-remainder, assigned
-  ALL capacity available after rootfs and required UBI internal reserves.
-- There is NO UBI identity volume and no fixed 100-LEB unallocated
-  reserve. UBI capacity for rootfs_data cannot be calculated precisely
-  before the actual image, NAND bad blocks and UBI overhead are known.
+NO separate physical Identity MTD partition, no relocation of Kernel
+or DTB. Identity is a read-only logical provider backed by the actual
+existing U-Boot Environment and factory sources, not a mountable root.
 
-Identity 2 MiB is also a proposal; no redundancy, ECC handling or
-provisioning format has been validated. The existing factory reserved
-partition is preserved separately and is not assumed to be expendable.
+The current UBI has a single writable rootfs UBIFS volume of 1652
+LEBs, no free available UBI volume LEBs and two bad PEBs in the
+observed session. Do not assume a new UBI split can be created live.
 
-**Critical boot blocker:** kernel moves from 18 to 20 MiB and DTB moves
-from 43 to 45 MiB. Current U-Boot/kernel/DTB may hard-code these
-offsets. The current bootloader's ability to load the proposed layout
-is UNKNOWN. No real flash or DTB update is authorized by this file.
+## Candidate logical UBI volumes (design only)
 
-## Future filesystem and update policy
+Inside the existing final UBI MTD partition:
 
-    /rom             read-only UBIFS rootfs lower
-    /overlay         UBIFS rootfs_data, read-write
-    /overlay/upper   OverlayFS upperdir
-    /overlay/work    OverlayFS workdir (same UBIFS mount)
-    /                merged OverlayFS
-    /identity        read-only identity service/mount, backend unresolved
-    /tmp             tmpfs
+- rootfs (vol 0): immutable UBIFS OS, image-sized (tentative
+  maximum 1024 LEB pending artifact measurement), mounted /rom ro.
+- rootfs_data (vol 1): writable UBIFS, OverlayFS upper/work,
+  autoresize to all remaining UBI-available volume capacity.
+- No third UBI identity volume and no artificial fixed trailing
+  free-volume reserve. UBI internally reserves bad-block/wear PEBs.
 
-System update updates kernel/DTB and rootfs UBI VOLUME (not the entire
-UBI MTD), preserving rootfs_data and identity. Clean install resets
-rootfs_data, preserving identity and factory boot chain. Factory reset
-resets only rootfs_data; no firmware write.
+Logical UBI volumes are NOT physical contiguous NAND offsets. Exact
+rootfs_data LEB capacity is unknown until an actual build, UBI
+overhead, bad-block reserve and flash attach are measured.
 
-OverlayFS whiteouts and persistent upper files can shadow new lower
-defaults; migrations must version and merge config values explicitly.
-SquashFS-on-ubiblock is only a research option, not the A113X boot
-contract.
+    /rom             read-only UBIFS system
+    /overlay         writable UBIFS data volume
+    /overlay/upper   OverlayFS upper
+    /overlay/work    OverlayFS work
+    /                merged root namespace
+    /tmp             volatile tmpfs
 
-## Cost of allocating all remaining space
+Neither /identity filesystem mount nor writes to U-Boot Environment
+are required for this scheme. The future identity API reads the
+verified existing factory source through a restricted provider.
 
-The requested rootfs_data autoresize gives all currently available UBI
-volume space to user data; it does not leave unallocated volume blocks
-for a future rootfs resize. If a later firmware rootfs grows, an updater
-must safely snapshot and temporarily shrink/recreate rootfs_data (or
-implement another hardware-proven migration route), verify restored
-data and reserve enough RAM/external storage. A simple rootfs-volume
-write cannot magically enlarge a fully allocated rootfs. The identity
-MTD region must never be used as working space for this operation.
+## Update/reset semantics
 
-Rootfs image size and its future growth policy therefore remain separate
-engineering constraints. UBI's internal bad-block reserves are mandatory
-and cannot be consumed to make more user storage.
+System update replaces compatible Kernel/DTB and rootfs, preserving
+selected user configs and all protected NAND/identity material.
+Clean install resets user config, preserves factory env and serial.
+Factory reset resets only the user layer.
 
-## Required acceptance before activation
+As in OpenWrt NAND sysupgrade, replacing rootfs may require backing up
+and recreating rootfs_data. Autoresize uses all free volume space,
+which means a later enlarged rootfs cannot automatically grow while
+rootfs_data owns the rest. An upgrade must have a verified migration
+and temporary storage strategy.
 
-1. Verify actual bootloader source/environment and relocation capability,
-   DTB/MTD map, init= behavior, kernel/DTB loading and recovery.
-2. Build rootfs and measure true UBIFS output plus UBI reserved blocks.
-3. Select and verify identity format, source, integrity/ECC/redundancy,
-   provisioning and recovery without exposing unique secrets in Git.
-4. Implement early UBIFS read-only lower + persistent OverlayFS pivot;
-   prove fallback that never silently formats a damaged upper volume.
-5. Implement verified off-device backups, rootfs-only updates and
-   reset semantics, test against power loss and bad NAND blocks.
-6. Keep active legacy builder image and live Capsula untouched until
-   independently hardware-validated.
+OverlayFS whiteouts can mask new OS defaults, so copy selected
+configuration state with migrations, not arbitrary full upperdir data.
+SquashFS-on-ubiblock is only a research provider for another verified
+boot contract, not a confirmed current A113X design.
 
-Builder/storage.py is read-only. It checks contiguous aligned MTD
-ranges, fixed boot-chain preservation, logical UBI mode and fail-closed
-readiness gates, but CANNOT verify real boot or flash reliability.
+## Open blockers
 
-## OpenIPC precedent
+- The two valid ethaddr values conflict; authoritative U-Boot active
+  copy selection and final MAC provenance are unverified.
+- Current Alpine lacks fw_printenv, fw_setenv and fw_env.config.
+- Building the two UBI volumes, early-init pivot and any on-device
+  updater remain unimplemented and untested.
+- Factory serial source may require further read-only validation.
+- Exact rootfs capacity, UBI ECC/bad-block/power-loss recovery and
+  rootfs_data migration must be accepted on a recoverable physical unit.
+- The default Builder continues emitting legacy single writable UBIFS.
+  storage-plan returns may_install=false and may_switch_boot=false.
 
-OpenIPC NAND uses UBIFS rootfs + rootfs_data with OverlayFS and often
-vol_flags=autoresize; SquashFS is not universally the NAND lower.
-Unlike some OpenIPC boards, this Capsula currently has separate physical
-kernel and DTB partitions. Do not copy OpenIPC U-Boot flash offsets or
-run its sysupgrade as-is.
+See docs/OPENWRT_MIGRATION.md and uboot/IDENTITY.md.
