@@ -73,7 +73,7 @@ The HAL contract covers microphones, capture channels, speaker topology,
 jack/AUX/SPDIF outputs, capacitive/physical inputs, segmented/pixel
 displays, RGB LEDs, ambient sensors, Wi-Fi and Bluetooth. Unknown physical
 counts are null rather than guesses. Any missing or unimplemented feature
-is not advertised; the original ringled ELF is not a runtime dependency.
+is not advertised; no ring LED capability exists in the Capsula Mini profile.
 
 Generic HAL producers should use standard Linux ALSA, evdev, IIO,
 line-display/LED class, DRM and iwd/BlueZ interfaces. Tools diagnostics
@@ -87,7 +87,13 @@ version, HAL ABI, kernel revision and partition sizes, without downloading
 firmware or writing NAND. OpenIPC sysupgrade is inspiration, not a
 drop-in tool for our different NAND/UBI layout.
 
-See docs/HAL_CONTRACT.md and docs/UPDATES.md.
+See docs/HAL_CONTRACT.md, docs/UPDATES.md and docs/PERSISTENCE.md.
+
+The current writable UBI rootfs has no independent persistence volume:
+regular update and clean install are BOTH blocked until serial/device
+identity, rootfs user-data backups, restoration and recovery are validated.
+Clean installation may reset user settings but must retain unique identity.
+The Ring LED has been removed from the Capsula Mini feature profile.
 
 ## Licensing and attribution
 

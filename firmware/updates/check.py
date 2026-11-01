@@ -14,6 +14,7 @@ import sys
 from urllib.parse import urlsplit
 
 from builder.profile import artifact_fits, load_target
+from firmware.updates.persistence import PersistenceError, plan as persistence_plan
 
 MAX_MANIFEST_BYTES = 65536
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
@@ -57,6 +58,7 @@ def check_release(
     manifest_path: Path,
     signature_path: Path,
     public_key_path: Path,
+    mode: str = "system-update",
 ) -> dict:
     """Validate signed metadata only, never download payloads or touch NAND."""
     verify_ed25519(manifest_path, signature_path, public_key_path)
@@ -98,6 +100,9 @@ def check_release(
             raise ReleaseCheckError("Artifact requires an HTTPS URL without credentials")
     if offered < installed:
         raise ReleaseCheckError("Downgrade rejected")
+    if mode not in ("system-update", "clean-install"):
+        raise ReleaseCheckError("Signed firmware checks require a firmware-install mode")
+    preservation = persistence_plan(target, mode)
     return {
         "target": target["id"],
         "installed_version": installed_version,
@@ -106,7 +111,8 @@ def check_release(
         "signature": "ed25519-verified",
         "artifact_digests_checked": False,
         "may_flash": False,
-        "note": "No download, apply, rollback or NAND write implementation",
+        "persistence": preservation,
+        "note": "No download, backup/restore, apply, rollback or NAND write implementation",
     }
 
 
@@ -119,13 +125,16 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--signature", type=Path, required=True)
     parser.add_argument("--trusted-public-key", type=Path, required=True)
+    parser.add_argument("--mode", choices=("system-update", "clean-install"),
+                        default="system-update")
     args = parser.parse_args()
     try:
         outcome = check_release(
             load_target(args.target), args.installed,
             args.manifest, args.signature, args.trusted_public_key,
+            mode=args.mode,
         )
-    except (ReleaseCheckError, OSError, ValueError) as exc:
+    except (ReleaseCheckError, PersistenceError, OSError, ValueError) as exc:
         print("UPDATE_CHECK_FAILED:", exc, file=sys.stderr)
         return 2
     print(json.dumps(outcome, sort_keys=True, indent=2))

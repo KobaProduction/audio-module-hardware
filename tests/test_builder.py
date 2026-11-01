@@ -195,6 +195,8 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(data["status"], "NOT_HARDWARE_VALIDATED")
             self.assertFalse(data["application_included"])
             self.assertFalse(data["runtime_hal_verified"])
+            self.assertFalse(data["update_persistence"]["system_update"]["can_apply"])
+            self.assertFalse(data["update_persistence"]["clean_install"]["can_apply"])
             self.assertEqual(data["hal_abi_major"], 1)
             self.assertNotIn("light.ring", data["capabilities_declared"])
             self.assertEqual(data["artifacts"]["Image"]["sha256"],

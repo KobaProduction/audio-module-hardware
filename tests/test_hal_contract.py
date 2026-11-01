@@ -22,6 +22,8 @@ class HalContractTests(unittest.TestCase):
         self.assertIs(m["runtime_verified"], False)
         cap = {c["id"]: c for c in m["capabilities"]}
         self.assertNotIn("light.ring", cap)
+        source = json.loads((DEVICE_DIR / "capabilities.json").read_text())
+        self.assertNotIn("light.ring", [c["id"] for c in source["capabilities"]])
         self.assertNotIn("audio.playback.spdif", cap)
         self.assertEqual(cap["display.front"]["properties"]["digits"], 4)
         self.assertIsNone(cap["audio.capture.pdm"]["properties"]["physical_microphones"])

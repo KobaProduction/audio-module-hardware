@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
 from hal.manifest import CapabilityError, compile_manifest, write_manifest  # noqa: E402
+from firmware.updates.persistence import plan as persistence_plan  # noqa: E402
 from builder.kernel_config import (  # noqa: E402
     KernelConfigurationError, desired_symbols, write_config_overlay,
     assert_options_match,
@@ -299,6 +300,17 @@ def package_manifest(t: dict, work: Path) -> None:
                         c["id"] for c in hal_descriptor["capabilities"]
                     ],
                     "runtime_hal_verified": False,
+                    "update_persistence": {
+                        "system_update": {
+                            "can_apply": persistence_plan(t, "system-update")["can_apply"],
+                            "requires_external_identity_backup": True,
+                            "requires_external_user_backup": True
+                        },
+                        "clean_install": {
+                            "can_apply": persistence_plan(t, "clean-install")["can_apply"],
+                            "requires_external_identity_backup": True
+                        }
+                    },
                     "artifacts": {}}
     for filename, slot in files:
         f = artifacts / filename

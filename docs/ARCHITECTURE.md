@@ -121,3 +121,16 @@ private factory backups into source Git.
   services and remain disabled until physical recovery has been proven.
 
 See docs/HAL_CONTRACT.md and docs/UPDATES.md for explicit acceptance gates.
+
+
+## Persistence across system update vs clean install
+
+See docs/PERSISTENCE.md. Current Capsula Mini uses one 200 MiB
+writable UBI rootfs volume with zero available LEBs. Protecting the
+18 MiB factory boot chain does NOT protect SSH identity, Wi-Fi pairing
+or user config held inside rootfs. A device profile declares identity,
+user, system and factory data ownership. Firmware/updates/persistence.py
+proposes update/reset modes but blocks all write paths until verified
+off-device backup/restore and hardware recovery exist.
+
+Capsula Mini Ring LED is not a declared/planned device capability.

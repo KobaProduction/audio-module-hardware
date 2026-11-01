@@ -97,3 +97,12 @@ The kernel build must resolve its Kconfig and reject incompatible
 changes. Package and blob selection must also follow the same
 capability set. This supports minimal device images; it is not yet
 a verified size optimization on physical hardware.
+
+
+## Ring LED is intentionally excluded from Capsula Mini
+
+The Capsula Mini native Builder capabilities.json contains no ring LED
+declaration, including no planned entry. A historical private diagnostic
+binary is not installed, called or used as an HAL provider. Future
+addressable-light support requires an independently verified source-based
+driver/provider and explicit device-profile enablement.
