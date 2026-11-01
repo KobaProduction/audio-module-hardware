@@ -10,7 +10,7 @@ This device selects only their needed sets and provides:
 - per-board USB gadget identity, static USB network addresses and hostname
 - W1 Wi-Fi SAE workaround until the kernel driver issue is resolved
 - optional Alpine component selection via profile.json
-- future board-specific clock display, touch, light and ring LED clients
+- future board-specific clock display, touch and light clients
 
 The author's shell helpers clockdisp, lightmon and touch-keys have only
 been inspected, not reimplemented here. No closed binary ringled source
@@ -26,3 +26,8 @@ storage.json is an uninstalled capacity-checked proposal: rootfs (UBIFS
 read-only), rootfs_data (UBIFS writable OverlayFS), identity (existing protected U-Boot Environment in reserved NAND), with rootfs_data autoresized to all remaining UBI space. The currently running
 Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
 Do not treat the candidate as a tested production partition map.
+
+## OpenWrt port status
+
+`openwrt-port.json` describes a research-only port proposal, not a working
+OpenWrt device. No A113X image recipe or new U-Boot/flash layout is enabled.

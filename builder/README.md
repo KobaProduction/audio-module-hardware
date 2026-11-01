@@ -49,9 +49,21 @@ The static descriptor always sets runtime_verified=false.
 Each device may declare storage.json separately from its active firmware
 profile. The first Capsula candidate contains UBIFS rootfs, UBIFS
 rootfs_data which autoresizes to the remaining UBI space. Identity
-is an independent protected physical MTD partition after the boot chain
-and before kernel/DTB.
+remains in the existing protected reserved NAND / U-Boot Environment;
+no new MTD partition or relocation of kernel/DTB is planned.
 The read-only storage-plan command checks MTD order and UBI space policy and never
 changes the NAND or image builder. The active layout is explicitly
 legacy-single-ubifs; activating a future layout without validating a
 new early-init boot contract is forbidden.
+
+## OpenWrt A113X research lane (not buildable)
+
+The separate `openwrt-plan` phase reports an exact upstream OpenWrt release
+and five pinned feeds alongside the missing board/SoC port gates. The current
+Alpine source/image build remains the only image producer; OpenWrt build,
+install and sysupgrade actions do not exist.
+
+    python3 -m builder.build openwrt-plan --target capsula-mini-native
+
+The generic source pins live in firmware/openwrt, with board-specific
+acceptance state under devices/capsula-mini-native/openwrt-port.json.

@@ -5,9 +5,10 @@
 Adopt OpenWrt's SoC/target/package/image/upgrade boundaries without
 claiming that Capsula Mini already runs OpenWrt or can boot its images.
 
-The official OpenWrt source tree, target/linux, inspected 2026-11-01
-has no amlogic or meson target. Third-party Amlogic builds for other
-SoCs do not prove upstream A113X board support.
+The pinned OpenWrt v25.12.6 release, inspected 2026-11-01,
+has 47 `target/linux` entries and no amlogic or meson target.
+Third-party Amlogic builds for other SoCs do not prove upstream
+A113X board support.
 
 ## OpenWrt concept to Audio Module owner
 
@@ -26,10 +27,12 @@ profile that selects device-specific kernel and drivers. This matches
 our separation but does not prove full compatibility with our Alpine
 rootfs or patches.
 
-OpenWrt is a system including procd, UCI, ubus, netifd and a distro
-package ecosystem, while Alpine currently uses OpenRC, iwd and apk.
-Changing the operating system means porting those interfaces and
-building a matching target/toolchain, not merely replacing a rootfs.
+OpenWrt 25.12 uses `apk` as its package manager, but OpenWrt package
+metadata/feeds are not interchangeable with the current Alpine packages.
+OpenWrt also uses procd, UCI, ubus and netifd where Alpine currently
+uses OpenRC and iwd. Switching operating systems requires porting
+interfaces, kernel/driver support and a matching toolchain, not just
+replacing a rootfs.
 
 OpenWrt sysupgrade restores selected backed-up configs, not necessarily
 the entire writable overlay. On NAND it may recreate rootfs_data to
@@ -48,6 +51,23 @@ eliminate the need for backups on future upgrades.
   metadata, prospective read-only rootfs/OverlayFS design.
 - There is no official, built or tested OpenWrt Capsula Mini image.
   Do not use OpenWrt native sysupgrade against the existing Alpine image.
+
+## Pinned source baseline and separate readiness plan
+
+The first research-only source lock is OpenWrt `v25.12.6`, peeled tag
+commit `64900e756efa667774214f9c6b17c113222e01f7`. That tag's
+`feeds.conf.default` Git blob is
+`5741d9c187db446b9250b412dc3555f6e14e62e2` and defines five
+exact feed revisions, recorded in `firmware/openwrt/sources.json`.
+These source pins were confirmed directly from upstream Git tag and
+file contents on 2026-11-01. They are *not* a validated kernel/toolchain
+port or a built image. The current author's A113X kernel source is based
+on Linux 6.18.x; the 25.12 release uses a different kernel baseline,
+so compatible drivers/DT must be ported, not simply copied in.
+
+`python3 -m builder.build openwrt-plan --target capsula-mini-native`
+is offline/read-only and returns an explicit `RESEARCH_ONLY_NOT_BUILDABLE`
+status. No OpenWrt image/build/flash/sysupgrade phase is exposed.
 
 ## Migration tasks
 
