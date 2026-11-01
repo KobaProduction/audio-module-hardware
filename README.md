@@ -32,8 +32,8 @@ cross compiler plus build dependencies of upstream Linux, and
 mtd-utils (mkfs.ubifs / ubinize). The rootfs step must run as root
 to preserve package UID/GID and file capabilities.
 
-The builder downloads Alpine 3.24.1 minirootfs and host apk.static by
-SHA256. Signed target packages are obtained from Alpine v3.24
+The builder downloads Alpine 3.24.1 minirootfs, host apk.static, and
+the exact pinned A113X kernel source archive by SHA256. Signed target packages are obtained from Alpine v3.24
 repositories; package versions are NOT fully frozen yet.
 
 Commands from the repository root:

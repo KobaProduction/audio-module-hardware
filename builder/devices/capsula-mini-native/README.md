@@ -26,3 +26,16 @@ storage.json is an uninstalled capacity-checked proposal: rootfs (UBIFS
 read-only), rootfs_data (UBIFS writable OverlayFS), identity (existing protected U-Boot Environment in reserved NAND), with rootfs_data autoresized to all remaining UBI space. The currently running
 Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
 Do not treat the candidate as a tested production partition map.
+
+## Original kernel Device Tree name
+
+The pinned upstream A113X repository calls its source DTS
+`meson-axg-s420-marusia-mini.dts` and its DTB accordingly. That historical
+*filename* is not our public device identity: the DTS itself declares
+`model = "VK Capsula Mini (Amlogic A113X)"` and
+`compatible = "vk,capsula-mini", "amlogic,a113d", "amlogic,meson-axg"`.
+Our Builder selects that exact upstream DTB without rewriting kernel sources
+and emits the image artifact as `board.dtb`. A future reviewed in-tree
+DTS rename can use `meson-axg-capsula-mini.dts` (without altering the
+actual U-Boot-compatible DT layout), but renaming the existing upstream
+file or `compatible` now would need additional hardware acceptance.
