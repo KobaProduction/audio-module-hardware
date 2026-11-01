@@ -67,5 +67,10 @@
       "network.wifi",
       "network.bluetooth"
     ]
+  },
+  "storage": {
+    "active_layout": "legacy-single-ubifs",
+    "candidate_file": "storage.json",
+    "candidate_activated": false
   }
 }

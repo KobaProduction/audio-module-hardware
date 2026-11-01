@@ -30,3 +30,11 @@ runtime endpoint is operational.
 A future native update service can use the signed manifest/compatibility
 contracts in firmware/updates, but automatic OTA, NAND writing and
 device-side rollback remain disabled.
+
+
+## Immutable filesystem support
+
+Firmware/storage/ owns the future generic lower root + writable overlay
+contract. The current Alpine recipe still builds a single writable UBIFS
+rootfs, while Builder evaluates a separately versioned candidate layout.
+No init/pivot or alternate SquashFS boot path is installed yet.

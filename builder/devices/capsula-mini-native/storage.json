@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "device": "capsula-mini-native",
+  "state": "design-only",
+  "current": {
+    "layout": "single-ubifs",
+    "root_volume": "rootfs",
+    "volume_id": 0,
+    "allocated_lebs": 1652,
+    "boot_root": "ubi0:rootfs",
+    "writable_root": true
+  },
+  "candidate": {
+    "layout": "ubi-root-overlay",
+    "kernel_boot_root": "ubi0:rootfs",
+    "base_filesystem": "ubifs",
+    "overlay_filesystem": "overlayfs",
+    "data_filesystem": "ubifs",
+    "mounts": {
+      "lower": "/rom",
+      "merged": "/",
+      "data": "/overlay",
+      "upper": "/overlay/upper",
+      "work": "/overlay/work",
+      "identity": "/identity"
+    },
+    "volumes": [
+      {
+        "name": "rootfs",
+        "id": 0,
+        "role": "immutable-system",
+        "filesystem": "ubifs",
+        "max_lebs": 1024,
+        "read_only_at_runtime": true,
+        "preserve_during_system_update": false,
+        "preserve_during_clean_install": false
+      },
+      {
+        "name": "rootfs_data",
+        "id": 1,
+        "role": "user-overlay",
+        "filesystem": "ubifs",
+        "max_lebs": 512,
+        "read_only_at_runtime": false,
+        "preserve_during_system_update": true,
+        "preserve_during_clean_install": false
+      },
+      {
+        "name": "identity",
+        "id": 2,
+        "role": "device-identity",
+        "filesystem": "ubifs",
+        "max_lebs": 16,
+        "read_only_at_runtime": true,
+        "preserve_during_system_update": true,
+        "preserve_during_clean_install": true
+      }
+    ],
+    "safety_unallocated_lebs": 100,
+    "boot_pivot_verified": false,
+    "initial_provisioning_implemented": false,
+    "volume_migration_implemented": false,
+    "update_rootfs_only_implemented": false,
+    "recovery_validated": false,
+    "bootloader_root_parameter_unchanged": true,
+    "required_kernel_symbols": [
+      "CONFIG_OVERLAY_FS=y",
+      "CONFIG_UBIFS_FS=y",
+      "CONFIG_MTD_UBI=y"
+    ],
+    "early_init_implemented": false
+  },
+  "alternative": {
+    "layout": "squashfs-on-ubiblock",
+    "status": "research-only",
+    "rootfs_format": "squashfs",
+    "requires_new_root_boot_contract": true
+  }
+}

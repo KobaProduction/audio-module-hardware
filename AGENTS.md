@@ -3,6 +3,7 @@
 Read README.md, then docs/ARCHITECTURE.md completely before work.
 For HAL capability/backend work read docs/HAL_CONTRACT.md and hal/README.md.
 For OTA/version-check/update work read docs/UPDATES.md and docs/PERSISTENCE.md.
+For filesystem/image layout work read docs/STORAGE_LAYOUT.md, firmware/storage/README.md and the selected Builder storage.json.
 For target changes read builder/README.md and the selected device profile.
 
 Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
@@ -28,3 +29,5 @@ https://github.com/ArthurKoba/ai-agent-workflow
 Current Capsula Mini has no persistent UBI volume separate from writable
 rootfs. Never claim identity/settings survive a complete UBI overwrite;
 enforce off-device verified backup/restore and hardware recovery first.
+
+The OverlayFS multi-volume proposal is DESIGN ONLY: do not reformat the working UBI rootfs, install a new init, or assume SquashFS boot compatibility without hardware acceptance.

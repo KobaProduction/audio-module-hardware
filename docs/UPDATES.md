@@ -77,3 +77,14 @@ HAL control socket. Version-check/status APIs may be read-only.
 Update write operations need dedicated authorization, audit records,
 transaction state, and recovery policy. No timer-based update monitoring is
 enabled by the current code.
+
+
+## Future per-volume image updates
+
+The system layer will ultimately be mounted read-only and changes kept
+in rootfs_data (UBIFS/OverlayFS), with a separately provisioned identity
+volume. Only a proven rootfs-volume-specific updater may replace the
+OS. The existing rootfs.ubi generated for the legacy single-volume
+configuration is not a safe multi-volume OTA artifact, since writing
+a whole UBI partition would erase the overlay and identity. All
+install modes remain blocked; see docs/STORAGE_LAYOUT.md.

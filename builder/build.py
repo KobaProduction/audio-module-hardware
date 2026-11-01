@@ -18,6 +18,9 @@ sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
 from hal.manifest import CapabilityError, compile_manifest, write_manifest  # noqa: E402
 from firmware.updates.persistence import plan as persistence_plan  # noqa: E402
+from builder.storage import (  # noqa: E402
+    StoragePlanError, plan_storage, audit_immutable_rootfs,
+)
 from builder.kernel_config import (  # noqa: E402
     KernelConfigurationError, desired_symbols, write_config_overlay,
     assert_options_match,
@@ -339,6 +342,7 @@ def package_manifest(t: dict, work: Path) -> None:
 def plan(t: dict, work: Path) -> None:
     packages = apk_packages(t)
     descriptor = compile_manifest(t)
+    storage = plan_storage(t)
     summary = {"id": t["id"], "soc": t["soc"], "kernel_sha": t["kernel"]["revision"],
                "alpine": t["os"]["release"], "packages": len(packages),
                "components": t["firmware"]["components"],
@@ -347,13 +351,18 @@ def plan(t: dict, work: Path) -> None:
                "protected_nand": [0, t["nand"]["protected_until"]],
                "rootfs": "Alpine minirootfs + signed APK packages + overlay",
                "application_included": False, "bootloader_rebuild": False,
-               "status": "source-build-recipe-only"}
+               "status": "source-build-recipe-only",
+               "storage_layout_active": t["storage"]["active_layout"],
+               "storage_candidate": storage.mode,
+               "storage_candidate_installable": storage.may_install}
     print(json.dumps(summary, indent=2))
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Build source-based Audio Module images; no flash actions")
-    p.add_argument("phase", choices=("plan", "fetch-kernel", "kernel", "rootfs", "image", "all"))
+    p.add_argument("phase", choices=("plan", "storage-plan", "storage-audit",
+                                     "fetch-kernel",
+                                     "kernel", "rootfs", "image", "all"))
     p.add_argument("--target", default="capsula-mini-native")
     p.add_argument("--work", type=Path, default=ROOT / ".work" / "capsula-mini-native")
     p.add_argument("--jobs", type=int, default=min(os.cpu_count() or 2, 8))
@@ -369,6 +378,13 @@ def main() -> int:
             raise BuildError("Work directory must not overwrite repository sources")
         if args.phase == "plan":
             plan(t, work)
+        elif args.phase == "storage-plan":
+            print(json.dumps(plan_storage(t).to_dict(), indent=2))
+        elif args.phase == "storage-audit":
+            result = audit_immutable_rootfs(work / "rootfs")
+            print(json.dumps(result, indent=2))
+            if not result["safe_to_package_as_immutable_lower"]:
+                raise BuildError("Rootfs contains device-specific mutable state; not suitable for immutable lower")
         elif args.phase == "fetch-kernel":
             fetch_kernel(t, work)
         elif args.phase == "kernel":
@@ -382,7 +398,8 @@ def main() -> int:
             stage_rootfs(t, work, args.authorized_key_file)
             pack_images(t, work)
         return 0
-    except (BuildError, ProfileError, CapabilityError, KernelConfigurationError,
+    except (BuildError, ProfileError, StoragePlanError,
+            CapabilityError, KernelConfigurationError,
             OSError, subprocess.CalledProcessError,
             ValueError, KeyError) as exc:
         print("BUILD_FAILED:", exc, file=sys.stderr)
