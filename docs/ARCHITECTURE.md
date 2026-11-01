@@ -17,8 +17,14 @@ a permanently divergent device branch.
 | builder/devices/ | Board models, variants and minimal overlays | builder device profiles |
 | tools/ | USB transport, backup and recovery | separate utilities if needed |
 
-Audio Module Application is a separate repo. It has not been implemented, so
-the first device image must boot without it. Centralized voice agents and
+The current GitHub layout has **two** Audio Module repositories: Hardware and
+[Application](https://github.com/KobaProduction/audio-module-application).
+Kernel/U-Boot/Firmware/Builder/Tools stay *within Hardware* for now; an extra
+Builder or Firmware repository is not planned. See the
+[repository ownership and handoff map](REPOSITORIES.md).
+
+Application exists as a separate repository but is not implemented; the
+first device image must boot without it. Centralized voice agents and
 home automation remain outside this hardware repository.
 
 ## Target model
