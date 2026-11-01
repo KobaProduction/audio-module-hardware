@@ -56,8 +56,10 @@ def validate_target(t: dict) -> None:
     kernel = t["kernel"]
     if not HEX_SHA.fullmatch(kernel["revision"]):
         raise ProfileError("Kernel must be pinned to a full SHA")
-    if not kernel["source"].startswith("https://github.com/"):
+    if not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git", kernel["source"]):
         raise ProfileError("Kernel source must be a GitHub HTTPS repository")
+    if "archive_sha256" in kernel and not re.fullmatch(r"[0-9a-f]{64}", kernel["archive_sha256"]):
+        raise ProfileError("Kernel source archive SHA256 must be pinned")
     if "/" in kernel["defconfig"] or kernel["defconfig"].startswith("."):
         raise ProfileError("Unsafe kernel defconfig")
     if not re.fullmatch(r"[a-z0-9_/-]+\.dtb", kernel["dtb"]):

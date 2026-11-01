@@ -55,6 +55,7 @@
           "CONFIG_BT_HCIUART_AML": "y"
         }
       }
-    }
+    },
+    "archive_sha256": "336ddcd6861cef8f111e816218eb04ced9b204cec4380ebd70e06c521809e9db"
   }
 }

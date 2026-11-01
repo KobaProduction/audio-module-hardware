@@ -31,6 +31,7 @@ def _source_paths(target: dict, root: Path) -> list[Path]:
         "builder/build.py",
         "builder/input_attestation.py",
         "builder/kernel_config.py",
+        "builder/kernel_source.py",
         "builder/profile.py",
         "hal/manifest.py",
         "firmware/updates/persistence.py",
