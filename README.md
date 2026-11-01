@@ -39,6 +39,7 @@ repositories; package versions are NOT fully frozen yet.
 Commands from the repository root:
 
     python3 -m builder.build plan --target capsula-mini-native
+    python3 -m builder.build openwrt-plan --target capsula-mini-native
     python3 -m builder.build storage-plan --target capsula-mini-native
     python3 -m builder.build storage-audit --target capsula-mini-native
     python3 -m builder.build fetch-kernel --target capsula-mini-native
@@ -154,3 +155,10 @@ for per-device state (SSH host keys, user authorizations, Wi-Fi credentials,
 machine-id, gadget identity, and data folders). It does not copy or log
 secret contents. The existing image recipe commonly contains provisioning
 data and therefore is NOT automatically a safe immutable system image.
+
+## Independent OpenWrt port research
+
+OpenWrt v25.12.6 and its five default feeds are now pinned as a separate
+read-only source baseline, and Builder reports why the proposed A113X port
+is not yet buildable or installable. This does **not** switch the active
+Alpine system. See firmware/openwrt/README.md and docs/OPENWRT_MIGRATION.md.

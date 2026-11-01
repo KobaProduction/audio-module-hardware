@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "device": "capsula-mini-native",
+  "status": "research-only",
+  "proposed_target_family": "amlogic",
+  "proposed_subtarget": "a113x",
+  "upstream_family_present_in_pinned_release": false,
+  "native_target_port_implemented": false,
+  "kernel_dts_driver_port_verified": false,
+  "feeds_and_packages_resolved": false,
+  "toolchain_build_verified": false,
+  "image_recipe_implemented": false,
+  "ubi_artifact_verified": false,
+  "hardware_boot_and_recovery_verified": false,
+  "preserve_existing_vendor_boot_chain": true,
+  "preserve_existing_factory_partitions": true,
+  "replace_active_alpine_rootfs": false,
+  "allow_nand_writes": false,
+  "allow_sysupgrade": false
+}

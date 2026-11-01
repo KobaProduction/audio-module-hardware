@@ -16,6 +16,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
+from builder.openwrt import OpenWrtPortError, plan_openwrt  # noqa: E402
 from hal.manifest import CapabilityError, compile_manifest, write_manifest  # noqa: E402
 from firmware.updates.persistence import plan as persistence_plan  # noqa: E402
 from builder.storage import (  # noqa: E402
@@ -360,7 +361,7 @@ def plan(t: dict, work: Path) -> None:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Build source-based Audio Module images; no flash actions")
-    p.add_argument("phase", choices=("plan", "storage-plan", "storage-audit",
+    p.add_argument("phase", choices=("plan", "openwrt-plan", "storage-plan", "storage-audit",
                                      "fetch-kernel",
                                      "kernel", "rootfs", "image", "all"))
     p.add_argument("--target", default="capsula-mini-native")
@@ -378,6 +379,8 @@ def main() -> int:
             raise BuildError("Work directory must not overwrite repository sources")
         if args.phase == "plan":
             plan(t, work)
+        elif args.phase == "openwrt-plan":
+            print(json.dumps(plan_openwrt(t), indent=2))
         elif args.phase == "storage-plan":
             print(json.dumps(plan_storage(t).to_dict(), indent=2))
         elif args.phase == "storage-audit":
@@ -398,7 +401,7 @@ def main() -> int:
             stage_rootfs(t, work, args.authorized_key_file)
             pack_images(t, work)
         return 0
-    except (BuildError, ProfileError, StoragePlanError,
+    except (BuildError, ProfileError, StoragePlanError, OpenWrtPortError,
             CapabilityError, KernelConfigurationError,
             OSError, subprocess.CalledProcessError,
             ValueError, KeyError) as exc:
