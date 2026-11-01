@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(git rev-parse --show-toplevel)"
-for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md docs/HAL_CONTRACT.md docs/UPDATES.md docs/PERSISTENCE.md docs/STORAGE_LAYOUT.md docs/OPENWRT_MIGRATION.md firmware/openwrt/sources.json firmware/openwrt/README.md builder/openwrt.py builder/devices/capsula-mini-native/openwrt-port.json uboot/IDENTITY.md uboot/env_audit.py firmware/storage/README.md builder/build.py builder/profile.py builder/kernel_config.py builder/storage.py builder/devices/capsula-mini-native/storage.json builder/devices/capsula-mini-native/profile.json builder/devices/capsula-mini-native/capabilities.json builder/devices/capsula-mini-native/persistence.json kernel/platforms/amlogic-a113x.json hal/manifest.py hal/probe.py firmware/updates/check.py firmware/updates/persistence.py; do
+for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md docs/HAL_CONTRACT.md docs/UPDATES.md docs/PERSISTENCE.md docs/STORAGE_LAYOUT.md docs/ARCHITECTURE_REFERENCES.md uboot/IDENTITY.md uboot/env_audit.py firmware/storage/README.md builder/build.py builder/profile.py builder/kernel_config.py builder/storage.py builder/devices/capsula-mini-native/storage.json builder/devices/capsula-mini-native/profile.json builder/devices/capsula-mini-native/capabilities.json builder/devices/capsula-mini-native/persistence.json kernel/platforms/amlogic-a113x.json hal/manifest.py hal/probe.py firmware/updates/check.py firmware/updates/persistence.py; do
     test -s "$f" || { echo "Missing expected bootstrap: $f" >&2; exit 1; }
 done
 empty_tree="$(git hash-object -t tree /dev/null)"
@@ -19,7 +19,6 @@ python3 -m unittest discover -s tests -v
 # Windows source tests are offline mocks and run cross-platform.
 python3 -m unittest discover -s tools/amlogic/worldcup/windows -p 'test_*.py' -v
 python3 -m builder.build plan >/dev/null
-python3 -m builder.build openwrt-plan >/dev/null
 python3 -m firmware.updates.check --help >/dev/null
 sh -n scripts/verify.sh
 sh -n .githooks/pre-push

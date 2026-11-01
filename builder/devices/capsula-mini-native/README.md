@@ -26,8 +26,3 @@ storage.json is an uninstalled capacity-checked proposal: rootfs (UBIFS
 read-only), rootfs_data (UBIFS writable OverlayFS), identity (existing protected U-Boot Environment in reserved NAND), with rootfs_data autoresized to all remaining UBI space. The currently running
 Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
 Do not treat the candidate as a tested production partition map.
-
-## OpenWrt port status
-
-`openwrt-port.json` describes a research-only port proposal, not a working
-OpenWrt device. No A113X image recipe or new U-Boot/flash layout is enabled.

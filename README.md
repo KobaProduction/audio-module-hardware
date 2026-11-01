@@ -39,7 +39,6 @@ repositories; package versions are NOT fully frozen yet.
 Commands from the repository root:
 
     python3 -m builder.build plan --target capsula-mini-native
-    python3 -m builder.build openwrt-plan --target capsula-mini-native
     python3 -m builder.build storage-plan --target capsula-mini-native
     python3 -m builder.build storage-audit --target capsula-mini-native
     python3 -m builder.build fetch-kernel --target capsula-mini-native
@@ -79,7 +78,7 @@ This follows the OpenIPC NAND architecture (which need not use SquashFS),
 while leaving SquashFS-on-ubiblock as a research-only future provider.
 The new layout cannot be installed or switched on until early boot/pivot,
 actual volumes, backup/identity migration and physical recovery work.
-See docs/STORAGE_LAYOUT.md and docs/OPENWRT_MIGRATION.md.
+See docs/STORAGE_LAYOUT.md and docs/ARCHITECTURE_REFERENCES.md.
 
 ## HAL and safe update architecture
 
@@ -156,9 +155,9 @@ machine-id, gadget identity, and data folders). It does not copy or log
 secret contents. The existing image recipe commonly contains provisioning
 data and therefore is NOT automatically a safe immutable system image.
 
-## Independent OpenWrt port research
+## Architecture references
 
-OpenWrt v25.12.6 and its five default feeds are now pinned as a separate
-read-only source baseline, and Builder reports why the proposed A113X port
-is not yet buildable or installable. This does **not** switch the active
-Alpine system. See firmware/openwrt/README.md and docs/OPENWRT_MIGRATION.md.
+OpenWrt contributes development patterns only: shared SoC sources, device
+profiles, optional firmware components, image contracts and update/persistence
+separation. **No OpenWrt port or OS migration is planned.** See
+docs/ARCHITECTURE_REFERENCES.md.

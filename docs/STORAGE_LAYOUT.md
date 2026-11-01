@@ -68,8 +68,8 @@ selected user configs and all protected NAND/identity material.
 Clean install resets user config, preserves factory env and serial.
 Factory reset resets only the user layer.
 
-As in OpenWrt NAND sysupgrade, replacing rootfs may require backing up
-and recreating rootfs_data. Autoresize uses all free volume space,
+Replacing rootfs may require backing up and recreating rootfs_data.
+This is a storage/update design consideration, not a plan to port OpenWrt. Autoresize uses all free volume space,
 which means a later enlarged rootfs cannot automatically grow while
 rootfs_data owns the rest. An upgrade must have a verified migration
 and temporary storage strategy.
@@ -92,4 +92,4 @@ boot contract, not a confirmed current A113X design.
 - The default Builder continues emitting legacy single writable UBIFS.
   storage-plan returns may_install=false and may_switch_boot=false.
 
-See docs/OPENWRT_MIGRATION.md and uboot/IDENTITY.md.
+See docs/ARCHITECTURE_REFERENCES.md and uboot/IDENTITY.md.

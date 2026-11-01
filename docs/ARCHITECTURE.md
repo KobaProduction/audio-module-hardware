@@ -147,3 +147,12 @@ Builder/storage.py is a read-only capacity validator; the existing
 single writable rootfs.ubi image is still the only build target.
 SquashFS-on-ubiblock is NOT the current Capsula boot layout.
 See docs/STORAGE_LAYOUT.md and firmware/storage/README.md.
+
+## External architecture references (not OS migration)
+
+OpenWrt is used only as a reference for structuring SoC support,
+per-device profiles, optional firmware components, deterministic image
+composition and safe update boundaries. The platform continues building
+Linux/Alpine and retains its existing U-Boot/NAND contract; no OpenWrt
+port, feeds, ImageBuilder or userspace migration is planned.
+See docs/ARCHITECTURE_REFERENCES.md for the explicit ownership mapping.

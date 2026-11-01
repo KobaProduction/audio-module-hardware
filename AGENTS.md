@@ -3,7 +3,7 @@
 Read README.md, then docs/ARCHITECTURE.md completely before work.
 For HAL capability/backend work read docs/HAL_CONTRACT.md and hal/README.md.
 For OTA/version-check/update work read docs/UPDATES.md and docs/PERSISTENCE.md.
-For filesystem/image layout work read docs/STORAGE_LAYOUT.md, docs/OPENWRT_MIGRATION.md, firmware/storage/README.md and the selected Builder storage.json.
+For filesystem/image layout work read docs/STORAGE_LAYOUT.md, docs/ARCHITECTURE_REFERENCES.md, firmware/storage/README.md and the selected Builder storage.json.
 For target changes read builder/README.md and the selected device profile.
 
 Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
@@ -22,6 +22,11 @@ without reproducible tests and a validated recovery path.
 
 Future repository extraction follows OpenIPC-style independent component
 ownership while preserving pinned source and image contracts.
+
+OpenWrt is an architecture/development-workflow reference ONLY. Do not create
+OpenWrt SoC ports, feeds, toolchains, image build lanes or distro migration tasks.
+Keep source-built Alpine and the existing kernel unless explicitly directed
+to change the operating system. See docs/ARCHITECTURE_REFERENCES.md.
 
 Use relevant skills and Git workflow from:
 https://github.com/ArthurKoba/ai-agent-workflow
