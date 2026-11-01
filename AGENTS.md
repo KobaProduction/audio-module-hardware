@@ -1,6 +1,7 @@
 # AGENTS.md
 
 Read README.md, then docs/ARCHITECTURE.md completely before work.
+For GitHub repository ownership and Application handoff, read docs/REPOSITORIES.md.
 For HAL capability/backend work read docs/HAL_CONTRACT.md and hal/README.md.
 For OTA/version-check/update work read docs/UPDATES.md and docs/PERSISTENCE.md.
 For filesystem/image layout work read docs/STORAGE_LAYOUT.md, docs/ARCHITECTURE_REFERENCES.md, firmware/storage/README.md and the selected Builder storage.json.

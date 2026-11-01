@@ -6,7 +6,11 @@ later be separated into OpenIPC-style kernel, U-Boot, firmware, builder
 and flasher projects without changing target contracts.
 
 **Current first target:** Capsula Mini native, Amlogic A113X.
-**Application:** not implemented or bundled yet.
+**Application:** [separate repository](https://github.com/KobaProduction/audio-module-application), not implemented or bundled yet.
+
+See [repository ownership and Application handoff](docs/REPOSITORIES.md)
+for the actual two-repository GitHub layout, internal components, new-agent
+entry points and interface acceptance boundaries.
 
 ## Source layout
 
@@ -129,9 +133,13 @@ backup, unique device credentials or user NAND dumps are committed.
 
 ## Status
 
-Architecture and build recipe are initialized. Local tests verify source
-pins, NAND boundaries, overlay resolution and image metadata. This is
-not a production-ready or independently hardware-booted image.
+The source-based Alpine/Kernel/DTB/modules/UBI image pipeline has been
+assembled in a host WSL environment. The later Capsula Mini DTS/defconfig
+rename was compiled and the DTB matched the earlier binary, but the latest
+complete firmware was not rebuilt and booted on physical hardware.
+This is a **source-build/handoff foundation**, not a flash-approved image.
+Current open Hardware acceptance work remains tracked in GitHub Issues;
+Application development can proceed in its separate repository.
 
 See docs/ARCHITECTURE.md for future modularization and safety.
 

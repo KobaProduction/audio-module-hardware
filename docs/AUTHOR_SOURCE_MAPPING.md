@@ -41,14 +41,14 @@ that each tool already has a complete new implementation.
 
 | Existing file or function | Intended owner | Next action |
 | --- | --- | --- |
-| /usr/local/bin/clockdisp (shell) | Builder / Capsula Mini display control | Port as a board-aware client of generic Linux seg-led sysfs; do not embed display protocol in Firmware |
-| /usr/local/bin/lightmon (shell) | Builder / Capsula Mini sensor diagnostic | Replace hard-coded IIO addresses with discovered device attributes |
-| /usr/local/bin/touch-keys (shell) | Builder / Capsula Mini input diagnostic | Replace hard-coded /dev/input/event0 with discovery |
-| /usr/local/bin/ringled (static AArch64 ELF) | Builder / Capsula Mini LED ring diagnostic | Source not located; reverse/reimplement as needed, keep binary private |
-| /usr/local/bin/mic-speaker-test (shell) | Shared audio diagnostics, with board profile | Extract generic ALSA pipeline and board ALSA choices |
+| /usr/local/bin/clockdisp (shell) | Tools / optional display diagnostic; board wiring remains Builder data | If retained, use the generic Linux segment-display interface. Runtime display behavior belongs to Application / future HAL provider, not Builder executable logic |
+| /usr/local/bin/lightmon (shell) | Tools / optional read-only sensor diagnostic | Use discovered IIO attributes; Application owns runtime sensor responses via the future HAL interface |
+| /usr/local/bin/touch-keys (shell) | Tools / optional read-only input diagnostic | Discover input devices; Application owns event/action processing via the future HAL interface |
+| /usr/local/bin/ringled (static AArch64 ELF) | Private historical reference only; excluded from this device | No ring capability is selected or planned for Capsula Mini; do not bundle or reimplement without a new explicit requirement |
+| /usr/local/bin/mic-speaker-test (shell) | Tools / optional ALSA diagnostic, board mapping via Builder | Application owns production audio routing and streams; tools must not become runtime dependencies |
 | /usr/local/bin/bt-pair (shell) | Firmware / optional Bluetooth component | Reimplement generic BlueZ pairing configuration |
 | /usr/local/bin/wifi-connect-iwd (shell) | Firmware / optional Wi-Fi component | Reimplement generic iwd provisioning, never commit credentials |
-| /usr/local/bin/offline-speak (shell) | Firmware / optional TTS package | Reassess only after application architecture |
+| /usr/local/bin/offline-speak (shell) | Application / future optional TTS pipeline | No TTS engine or voice pipeline is selected; Firmware may package an approved generic dependency later |
 | /usr/local/bin/check-secure.sh (shell) | Firmware / security checks | Port generic system/security status policy |
 
 System services and configuration:
@@ -83,10 +83,10 @@ prove that scripts or binary content can be redistributed, that the full
 kernel/U-Boot is buildable, or that a newly produced firmware boots.
 
 Next steps:
-- Keep implementing source-based kernel/DTB/modules and Alpine/UBI build.
+- Validate the existing source-built kernel/DTB/modules and Alpine/UBI image on recoverable physical hardware before authorizing installation.
 - Extract generic audio/network tool functionality into Firmware.
-- Port device diagnostics into Builder, with capability discovery and tests.
-- Reverse the ring LED and bootloader only from authorized local samples.
+- Keep board wiring in Builder; implement optional diagnostics in Tools and device runtime behavior in Application, over the agreed HAL contract.
+- Keep ring LED excluded; do not change the retained factory U-Boot without verified recovery and separate authorization.
 - Integrate generic tool transport with validated Builder NAND profiles.
 
 ## HAL migration state
