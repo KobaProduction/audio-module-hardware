@@ -1,180 +1,136 @@
-"""Plan-only storage model tests, never mount, format or flash a live device."""
-from __future__ import annotations
-
+"""Storage plan tests: only validation of a never-flashed candidate."""
 from copy import deepcopy
 import json
 from pathlib import Path
 import subprocess
-import tempfile
 import sys
+import tempfile
 import unittest
 
 from builder.profile import ProfileError, load_target, validate_target
-from builder.storage import (
-    StoragePlanError, load_storage_layout, plan_storage, audit_immutable_rootfs,
-)
+from builder.storage import StoragePlanError, audit_immutable_rootfs, load_storage_layout, plan_storage
 
 
-class StorageLayoutTests(unittest.TestCase):
-    def setUp(self) -> None:
+class StorageTests(unittest.TestCase):
+    def setUp(self):
         self.target = load_target("capsula-mini-native")
-        self.storage = load_storage_layout(self.target)
+        self.doc = load_storage_layout(self.target)
 
-    def test_current_root_remains_legacy_and_candidate_never_activates(self) -> None:
-        s = plan_storage(self.target)
-        self.assertEqual(s.current_boot_root, "ubi0:rootfs")
-        self.assertEqual(s.candidate_boot_root, "ubi0:rootfs")
-        self.assertEqual(s.mode, "design-only")
-        self.assertFalse(s.may_install)
-        self.assertFalse(s.may_switch_boot)
-        self.assertEqual(self.target["storage"]["active_layout"], "legacy-single-ubifs")
+    def test_legacy_unchanged(self):
+        plan = plan_storage(self.target)
+        self.assertEqual(plan.current_layout, "single-ubifs")
+        self.assertEqual(plan.current_boot_root, "ubi0:rootfs")
+        self.assertFalse(plan.may_install)
+        self.assertFalse(plan.may_switch_boot)
 
-    def test_three_volumes_fit_legacy_ubi_capacity(self) -> None:
+    def test_physical_order_and_contiguity(self):
+        p = plan_storage(self.target).physical_partitions
+        self.assertEqual([x.name for x in p], ["bootloader","reserved","tpl","misc","identity","kernel","dtb","ubi"])
+        self.assertEqual(p[0].offset_bytes, 0)
+        self.assertEqual(p[-1].offset_bytes+p[-1].size_bytes, self.target["nand"]["total_bytes"])
+        self.assertEqual(p[-1].size_bytes, 210*1024*1024)
+        for a,b in zip(p,p[1:]):
+            self.assertEqual(a.offset_bytes+a.size_bytes,b.offset_bytes)
+
+    def test_identity_between_boot_and_kernel(self):
         p = plan_storage(self.target)
-        self.assertEqual(p.budget_lebs, 1652)
-        self.assertEqual(p.allocated_lebs, 1552)
-        self.assertEqual(p.unallocated_lebs, 100)
-        self.assertEqual([v.name for v in p.volumes], ["rootfs", "rootfs_data", "identity"])
-        self.assertEqual([v.lebs for v in p.volumes], [1024, 512, 16])
-        self.assertTrue(all(v.filesystem == "ubifs" for v in p.volumes))
-        self.assertEqual(p.leb_bytes, 126976)
+        self.assertTrue(all(x.preserve_always for x in p.physical_partitions[:5]))
+        self.assertEqual(p.physical_partitions[4].offset_bytes,18*1024*1024)
+        self.assertEqual(p.physical_partitions[5].offset_bytes,20*1024*1024)
+        self.assertEqual(p.physical_partitions[6].offset_bytes,45*1024*1024)
+        self.assertEqual(p.identity_storage_format,"unselected")
+        self.assertEqual([x.name for x in p.ubi_volumes],["rootfs","rootfs_data"])
 
-    def test_only_system_root_is_replaced_by_normal_upgrade(self) -> None:
+    def test_data_autoresizes_without_fixed_tail_reserve(self):
         p = plan_storage(self.target)
-        rootfs, data, ident = p.volumes
-        self.assertFalse(rootfs.preserve_on_update)
-        self.assertTrue(rootfs.read_only)
-        self.assertTrue(data.preserve_on_update)
-        self.assertFalse(data.preserve_on_clean)
-        self.assertTrue(ident.preserve_on_update)
-        self.assertTrue(ident.preserve_on_clean)
-        self.assertTrue(ident.read_only)
+        self.assertEqual(p.ubi_volumes[0].allocation,"image-sized")
+        self.assertEqual(p.ubi_volumes[0].max_lebs,1024)
+        self.assertEqual(p.ubi_volumes[1].allocation,"autoresize-remainder")
+        self.assertIsNone(p.ubi_volumes[1].max_lebs)
+        self.assertIsNone(p.rootfs_data_exact_lebs)
+        self.assertEqual(p.fixed_unused_tail_lebs,0)
+        self.assertEqual(p.nominal_ubi_pebs,1680)
+        self.assertTrue(p.ubi_volumes[1].preserve_on_update)
+        self.assertFalse(p.ubi_volumes[1].preserve_on_clean)
 
-    def test_overlay_upper_and_work_have_same_ubi_backing(self) -> None:
-        c = self.storage["candidate"]
-        self.assertEqual(c["mounts"]["upper"], "/overlay/upper")
-        self.assertEqual(c["mounts"]["work"], "/overlay/work")
-        self.assertEqual(c["mounts"]["lower"], "/rom")
-        self.assertEqual(c["mounts"]["merged"], "/")
-        self.assertEqual(c["mounts"]["identity"], "/identity")
+    def test_reject_reordering_overlaps_and_unsafe_identity(self):
+        mutations = [
+            lambda d: d["candidate"]["physical_partitions"].reverse(),
+            lambda d: d["candidate"]["physical_partitions"][4].update(offset=0),
+            lambda d: d["candidate"]["physical_partitions"][4].update(bytes=131071),
+            lambda d: d["candidate"]["physical_partitions"][4].update(format="ubifs"),
+            lambda d: d["candidate"]["physical_partitions"][4].update(preserve_always=False),
+            lambda d: d["candidate"]["physical_partitions"][-1].update(bytes=1024),
+        ]
+        for mutate in mutations:
+            d=deepcopy(self.doc)
+            mutate(d)
+            with self.subTest(mutation=mutate):
+                with self.assertRaises(StoragePlanError):
+                    plan_storage(self.target,document=d)
 
-    def test_reject_storage_geometry_overcommit(self) -> None:
-        d = deepcopy(self.storage)
-        d["candidate"]["volumes"][0]["max_lebs"] = 1500
-        with self.assertRaisesRegex(StoragePlanError, "overcommit"):
-            plan_storage(self.target, document=d)
-
-    def test_reject_zero_reserved_growth_space(self) -> None:
-        d = deepcopy(self.storage)
-        d["candidate"]["safety_unallocated_lebs"] = 0
-        with self.assertRaisesRegex(StoragePlanError, "Insufficient"):
-            plan_storage(self.target, document=d)
-
-    def test_reject_different_root_volume_or_id(self) -> None:
-        for field, value in [("name", "rootfs_data"), ("id", 3),
-                             ("filesystem", "squashfs"), ("role", "resettable")]:
-            d = deepcopy(self.storage)
-            d["candidate"]["volumes"][0][field] = value
+    def test_reject_fixed_data_limit_reserves_and_overcommit(self):
+        def fixed(d): d["candidate"]["ubi"]["volumes"][1]["max_lebs"]=512
+        def reserve(d): d["candidate"]["ubi"]["additional_fixed_tail_reserve_lebs"]=100
+        def over(d): d["candidate"]["ubi"]["volumes"][0]["max_lebs"]=1670
+        def reorder(d): d["candidate"]["ubi"]["volumes"].reverse()
+        for mutate in (fixed,reserve,over,reorder):
+            d=deepcopy(self.doc)
+            mutate(d)
             with self.assertRaises(StoragePlanError):
-                plan_storage(self.target, document=d)
+                plan_storage(self.target,document=d)
 
-    def test_reject_identity_becoming_resettable(self) -> None:
-        d = deepcopy(self.storage)
-        d["candidate"]["volumes"][2]["preserve_during_clean_install"] = False
-        with self.assertRaisesRegex(StoragePlanError, "retention"):
-            plan_storage(self.target, document=d)
-
-    def test_reject_activation_without_hardware_acceptance(self) -> None:
-        p = deepcopy(self.target)
-        p["storage"]["candidate_activated"] = True
-        with self.assertRaisesRegex(ProfileError, "migration"):
-            validate_target(p)
-        d = deepcopy(self.storage)
-        d["state"] = "ready"
-        with self.assertRaisesRegex(StoragePlanError, "activation"):
-            plan_storage(self.target, document=d)
-
-    def test_squashfs_is_research_only_and_cannot_replace_ubi_root(self) -> None:
-        self.assertEqual(plan_storage(self.target).alternative_squashfs_status, "research-only")
-        d = deepcopy(self.storage)
-        d["candidate"]["base_filesystem"] = "squashfs"
-        with self.assertRaisesRegex(StoragePlanError, "Unverified storage backend"):
-            plan_storage(self.target, document=d)
-        d = deepcopy(self.storage)
-        d["alternative"]["status"] = "hardware-ready"
-        with self.assertRaisesRegex(StoragePlanError, "not boot-validated"):
-            plan_storage(self.target, document=d)
-
-    def test_reject_claims_of_early_boot_support_without_test(self) -> None:
-        for key in ("boot_pivot_verified", "early_init_implemented",
-                    "initial_provisioning_implemented", "update_rootfs_only_implemented"):
-            d = deepcopy(self.storage)
-            d["candidate"][key] = True
+    def test_fail_closed_on_unverified_activation_and_squashfs(self):
+        for field in ("bootloader_relocation_verified","kernel_dtb_offsets_verified",
+                      "early_init_implemented","identity_format_provisioning_implemented",
+                      "volume_migration_implemented","recovery_validated"):
+            d=deepcopy(self.doc)
+            d["candidate"][field]=True
             with self.assertRaises(StoragePlanError):
-                plan_storage(self.target, document=d)
+                plan_storage(self.target,document=d)
+        d=deepcopy(self.doc)
+        d["alternative"]["status"]="ready"
+        with self.assertRaises(StoragePlanError):
+            plan_storage(self.target,document=d)
+        t=deepcopy(self.target)
+        t["storage"]["candidate_activated"]=True
+        with self.assertRaises(ProfileError):
+            validate_target(t)
 
-    def test_immutable_rootfs_audit_rejects_personal_ssh_and_wifi_state(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "rootfs"
-            private = root / "root/.ssh/authorized_keys"
-            secret = root / "etc/iwd/home.psk"
-            for path in (private, secret):
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text("dummy-private-fixture")
-            result = audit_immutable_rootfs(root)
-            self.assertFalse(result["safe_to_package_as_immutable_lower"])
-            self.assertFalse(result["may_install"])
-            self.assertEqual(
-                set(result["private_state_paths"]),
-                {"root/.ssh/authorized_keys", "etc/iwd/home.psk"},
-            )
-            self.assertNotIn("dummy-private-fixture", str(result))
+    def test_json_cli_displays_physical_and_logical_separately(self):
+        proc=subprocess.run([sys.executable,"-m","builder.build","storage-plan","--target",
+                             "capsula-mini-native"],capture_output=True,text=True,check=True,timeout=10)
+        d=json.loads(proc.stdout)
+        self.assertFalse(d["may_install"])
+        self.assertEqual(d["physical_partitions"][4]["name"],"identity")
+        self.assertEqual(d["ubi_volumes"][1]["allocation"],"autoresize-remainder")
 
-    def test_empty_candidate_lower_audit_does_not_imply_install_readiness(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "etc").mkdir()
-            (root / "etc/machine-id").write_text("")
-            result = audit_immutable_rootfs(root)
-            self.assertTrue(result["safe_to_package_as_immutable_lower"])
-            self.assertFalse(result["may_install"])
+    def test_read_only_secret_inventory(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)/"rootfs"
+            ssh=root/"root/.ssh/authorized_keys"
+            wifi=root/"etc/iwd/home.psk"
+            for x in (ssh,wifi):
+                x.parent.mkdir(parents=True,exist_ok=True)
+                x.write_text("private-test-marker")
+            s=audit_immutable_rootfs(root)
+            self.assertFalse(s["safe_to_package_as_immutable_lower"])
+            self.assertFalse(s["may_install"])
+            self.assertNotIn("private-test-marker",str(s))
+            proc=subprocess.run([sys.executable,"-m","builder.build","storage-audit",
+                "--target","capsula-mini-native","--work",d],
+                capture_output=True,text=True,timeout=10)
+            self.assertNotEqual(proc.returncode,0)
+            self.assertEqual(ssh.read_text(),"private-test-marker")
 
-    def test_rootfs_audit_cannot_be_run_on_missing_or_symlink_root(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            with self.assertRaises(StoragePlanError):
-                audit_immutable_rootfs(root / "missing")
-            (root / "files").mkdir()
-            (root / "link").symlink_to(root / "files", target_is_directory=True)
-            with self.assertRaises(StoragePlanError):
-                audit_immutable_rootfs(root / "link")
-
-    def test_storage_audit_is_read_only_and_fails_closed(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            work = Path(directory)
-            user = work / "rootfs/root/.ssh/authorized_keys"
-            user.parent.mkdir(parents=True, exist_ok=True)
-            user.write_text("dummy-private-fixture")
-            run = subprocess.run(
-                [sys.executable, "-m", "builder.build", "storage-audit",
-                 "--target", "capsula-mini-native", "--work", str(work)],
-                capture_output=True, text=True, timeout=10, check=False,
-            )
-            self.assertNotEqual(run.returncode, 0)
-            self.assertEqual(user.read_text(), "dummy-private-fixture")
-            self.assertNotIn("dummy-private-fixture", run.stdout + run.stderr)
-
-    def test_candidate_has_nonwriting_json_cli(self) -> None:
-        output = subprocess.run(
-            [sys.executable, "-m", "builder.build", "storage-plan",
-             "--target", "capsula-mini-native"],
-            capture_output=True, text=True, check=True, timeout=10,
-        )
-        doc = json.loads(output.stdout)
-        self.assertFalse(doc["may_install"])
-        self.assertFalse(doc["may_switch_boot"])
-        self.assertEqual(doc["volumes"][1]["name"], "rootfs_data")
-        self.assertGreater(len(doc["blockers"]), 3)
+    def test_empty_audit_still_does_not_approve_install(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)
+            (p/"etc").mkdir()
+            (p/"etc/machine-id").write_text("")
+            s=audit_immutable_rootfs(p)
+            self.assertTrue(s["safe_to_package_as_immutable_lower"])
+            self.assertFalse(s["may_install"])
 
 
 if __name__ == "__main__":

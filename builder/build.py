@@ -353,7 +353,7 @@ def plan(t: dict, work: Path) -> None:
                "application_included": False, "bootloader_rebuild": False,
                "status": "source-build-recipe-only",
                "storage_layout_active": t["storage"]["active_layout"],
-               "storage_candidate": storage.mode,
+               "storage_candidate": storage.status,
                "storage_candidate_installable": storage.may_install}
     print(json.dumps(summary, indent=2))
 

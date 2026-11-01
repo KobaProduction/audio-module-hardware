@@ -1,101 +1,132 @@
-# Rootfs / SquashFS / OverlayFS design for Audio Module
+# Physical NAND and logical UBI storage architecture
 
-## Decision: use the OpenIPC NAND separation
+## Requested physical order
 
-For Capsula Mini start with read-only UBIFS for the system rootfs,
-writable UBIFS for rootfs_data, and a merged OverlayFS namespace at /.
-A third protected identity volume holds unique provisioned device state.
-Use SquashFS as a future alternative lower filesystem, not as a required
-A113X rootfs format. An existing vendor bootloader that expects
-root=ubi0:rootfs must not be assumed to boot SquashFS through UBIBLOCK.
+Future new-install layout:
 
-Current kernel command line roots the device in a SINGLE writable UBIFS
-rootfs. UBI reports no free LEBs. The proposal does NOT describe the
-currently running layout.
+    U-Boot / boot-chain (existing bootloader, reserved, tpl, misc)
+    Identity (separate protected MTD partition)
+    Kernel and its separate DTB slot
+    UBI partition to physical NAND end:
+      rootfs       (read-only UBIFS, image-sized)
+      rootfs_data  (writable UBIFS OverlayFS, autoresize remainder)
 
-## Proposal: three UBI volumes inside existing MTD ubi partition
+The UBI rootfs and rootfs_data are LOGICAL wear-levelled volumes, not
+contiguous fixed physical offsets. Rootfs Data "fills to the end"
+by claiming all remaining UBI-available volume blocks at initialization.
+No additional fixed tail reserve is allocated. UBI itself retains
+bad-block/wear-levelling reserves, which must not be disabled.
 
-Current physical evidence: partition ubi = 212 MiB, PEB = 131072 bytes,
-LEB = 126976 bytes; old rootfs holds 1652 LEBs, UBI has separate bad-
-block management reserve, two bad PEBs were reported.
+Identity is a protected PHYSICAL MTD partition between the boot chain
+and Kernel, not a third UBI volume after rootfs_data. Its storage format
+and provisioned serial source are still UNKNOWN. Until decided, an MTD
+partition is not automatically mountable under /identity.
 
-Only after verified external backup and successful recovery testing:
+## Actual physical state (256 MiB NAND, do NOT reflash)
 
-| Volume | ID | Maximum | Purpose |
-| --- | --- | --- | --- |
-| rootfs | 0 | 1024 LEB (about 124 MiB) | immutable read-only system |
-| rootfs_data | 1 | 512 LEB (about 62 MiB) | writable user/test overlay |
-| identity | 2 | 16 LEB (about 1.94 MiB) | protected identity, read-only mounted |
-| unallocated capacity | n/a | 100 LEB (about 12.1 MiB) | future volume growth |
+| MTD | Start MiB | Size MiB |
+| --- | ---: | ---: |
+| bootloader | 0 | 2 |
+| reserved | 2 | 6 |
+| tpl | 8 | 8 |
+| misc | 16 | 2 |
+| kernel | 18 | 25 |
+| dtb | 43 | 1 |
+| ubi | 44 | 212 |
 
-These are trial capacity BOUNDS within the old rootfs LEB budget, not
-confirmed image sizes. Spare UBI LEBs here are NOT a substitute for
-UBI-internal bad-block reserves. The true new-image capacity must be
-checked against physical NAND, bad-block behavior and generated images.
-The identity volume must not be provisioned by putting universal serial
-or secret placeholders into a public rootfs image.
+Actual UBI contains only one writable UBIFS rootfs, 1652 LEB of 126976
+bytes each, no free volume LEBs and two known bad physical eraseblocks.
+Boot chain and factory protected regions (first 18 MiB) must not be
+changed without independent recovery validation.
 
-The builder storage.json describes ONLY a design candidate. Validation
-rejects overcommit, changed factory/volume policy, and an assertion that
-boot/migration/recovery have been validated. The current single-volume
-builder path remains active and unchanged.
+## Proposed MTD candidate (NOT HARDWARE VERIFIED)
 
-## Mount and update contract
+| MTD | Start MiB | Size MiB | Policy |
+| --- | ---: | ---: | --- |
+| bootloader | 0 | 2 | Preserve |
+| reserved | 2 | 6 | Preserve |
+| tpl | 8 | 8 | Preserve |
+| misc | 16 | 2 | Preserve |
+| identity | 18 | 2 tentative | Preserve even during clean install |
+| kernel | 20 | 25 | New kernel location |
+| dtb | 45 | 1 | New DTB location |
+| ubi | 46 | 210 | Last partition, to physical end (256 MiB) |
 
-    /rom          -> UBIFS rootfs lower, mount read-only
-    /overlay      -> UBIFS rootfs_data, persistent
-    /overlay/upper + /overlay/work -> same UBIFS filesystem
-    /             -> OverlayFS merged root
-    /identity     -> read-only UBIFS identity, separate from resettable data
-    /tmp          -> tmpfs
+Inside the final 210 MiB UBI MTD:
+- rootfs (volume ID 0): immutable UBIFS base, sized to produced image
+  with initial engineering cap 1024 LEB (~124 MiB).
+- rootfs_data (volume ID 1): UBIFS with autoresize-remainder, assigned
+  ALL capacity available after rootfs and required UBI internal reserves.
+- There is NO UBI identity volume and no fixed 100-LEB unallocated
+  reserve. UBI capacity for rootfs_data cannot be calculated precisely
+  before the actual image, NAND bad blocks and UBI overhead are known.
 
-A filesystem update must use a safe, proven rootfs-volume-only write,
-not an entire rootfs.ubi image containing all volumes. rootfs_data
-retains settings and test artifacts. A clean install clears only
-rootfs_data; a factory reset clears only rootfs_data without flashing
-the base OS. Unique identity and factory NAND are preserved in all modes.
+Identity 2 MiB is also a proposal; no redundancy, ECC handling or
+provisioning format has been validated. The existing factory reserved
+partition is preserved separately and is not assumed to be expendable.
 
-OverlayFS upper files and whiteouts can mask newly shipped lower OS
-defaults. Settings migration MUST handle those semantics; replacing
-rootfs is not itself an automatic settings migration.
+**Critical boot blocker:** kernel moves from 18 to 20 MiB and DTB moves
+from 43 to 45 MiB. Current U-Boot/kernel/DTB may hard-code these
+offsets. The current bootloader's ability to load the proposed layout
+is UNKNOWN. No real flash or DTB update is authorized by this file.
 
-## Hardware acceptance needed before activation
+## Future filesystem and update policy
 
-1. Enable CONFIG_OVERLAY_FS in the pinned kernel; retain UBIFS/UBI.
-2. Establish and boot-test early init and pivot_root before Alpine
-   OpenRC; test preserved init/bootargs and correct /rom mounting.
-3. Initialize each volume with proper UBIFS metadata/owner/modes.
-   Protect and provision identity from verified factory source.
-4. Build actual rootfs and measure against planned volume limits;
-   verify NAND bad-block, ECC and UBI reserve handling.
-5. Test power-loss, corrupted overlay and insufficient-storage
-   scenarios without silently erasing existing settings.
-6. Implement signed per-volume rootfs updates and recoverable
-   rollback; do not enable automatic NAND writes before evidence.
+    /rom             read-only UBIFS rootfs lower
+    /overlay         UBIFS rootfs_data, read-write
+    /overlay/upper   OverlayFS upperdir
+    /overlay/work    OverlayFS workdir (same UBIFS mount)
+    /                merged OverlayFS
+    /identity        read-only identity service/mount, backend unresolved
+    /tmp             tmpfs
 
-SquashFS-on-ubiblock remains a research-only backend until its own
-kernel/bootloader/init mount contract is hardware verified.
+System update updates kernel/DTB and rootfs UBI VOLUME (not the entire
+UBI MTD), preserving rootfs_data and identity. Clean install resets
+rootfs_data, preserving identity and factory boot chain. Factory reset
+resets only rootfs_data; no firmware write.
 
-## Sources inspected
+OverlayFS whiteouts and persistent upper files can shadow new lower
+defaults; migrations must version and merge config values explicitly.
+SquashFS-on-ubiblock is only a research option, not the A113X boot
+contract.
 
-OpenIPC wiki: en/nand-rootfs-layouts.md.
-OpenIPC Firmware: general/overlay/init,
-general/scripts/ubifs/ubinize.cfg,
-br-ext-chip-hisilicon/board/hi3516ev200/ubinize-nand.cfg.
+## Cost of allocating all remaining space
 
-No foreign firmware installation code or NAND offsets were copied.
+The requested rootfs_data autoresize gives all currently available UBI
+volume space to user data; it does not leave unallocated volume blocks
+for a future rootfs resize. If a later firmware rootfs grows, an updater
+must safely snapshot and temporarily shrink/recreate rootfs_data (or
+implement another hardware-proven migration route), verify restored
+data and reserve enough RAM/external storage. A simple rootfs-volume
+write cannot magically enlarge a fully allocated rootfs. The identity
+MTD region must never be used as working space for this operation.
 
-## Local no-flash storage review
+Rootfs image size and its future growth policy therefore remain separate
+engineering constraints. UBI's internal bad-block reserves are mandatory
+and cannot be consumed to make more user storage.
 
-The build-host storage-plan command only computes volumes and blockers,
-and does not run ubinize, mount or write NAND. The storage-audit
-command checks a staged rootfs for known personal data paths and
-fails closed if any are present. It never reads or logs their contents.
-A clean audit is necessary, not sufficient: future components can store
-credentials elsewhere, and the device must still be hardware-tested.
+## Required acceptance before activation
 
-The present Alpine staging uses a user-supplied authorized SSH public key
-and a board-local USB identity placeholder. The future immutable root
-must not embed personalized credentials or a supposedly unique serial.
-The identity/data volume must be provisioned separately, with validated
-permissions and verified restore/migration. This has not been implemented.
+1. Verify actual bootloader source/environment and relocation capability,
+   DTB/MTD map, init= behavior, kernel/DTB loading and recovery.
+2. Build rootfs and measure true UBIFS output plus UBI reserved blocks.
+3. Select and verify identity format, source, integrity/ECC/redundancy,
+   provisioning and recovery without exposing unique secrets in Git.
+4. Implement early UBIFS read-only lower + persistent OverlayFS pivot;
+   prove fallback that never silently formats a damaged upper volume.
+5. Implement verified off-device backups, rootfs-only updates and
+   reset semantics, test against power loss and bad NAND blocks.
+6. Keep active legacy builder image and live Capsula untouched until
+   independently hardware-validated.
+
+Builder/storage.py is read-only. It checks contiguous aligned MTD
+ranges, fixed boot-chain preservation, logical UBI mode and fail-closed
+readiness gates, but CANNOT verify real boot or flash reliability.
+
+## OpenIPC precedent
+
+OpenIPC NAND uses UBIFS rootfs + rootfs_data with OverlayFS and often
+vol_flags=autoresize; SquashFS is not universally the NAND lower.
+Unlike some OpenIPC boards, this Capsula currently has separate physical
+kernel and DTB partitions. Do not copy OpenIPC U-Boot flash offsets or
+run its sysupgrade as-is.

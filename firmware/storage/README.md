@@ -1,58 +1,29 @@
-# Root filesystem and writable overlay ownership
+# Generic filesystem composition and device-owned partitioning
 
-This component owns generic boot-storage contracts, not Capsula-specific
-flash offsets, volume budgets, or bootloader environment changes.
+Future Audio Module: protected boot chain -> identity MTD partition ->
+kernel and DTB -> terminal UBI partition.
 
-## OpenIPC NAND reference
+Inside UBI: immutable UBIFS rootfs (image-sized) and writable UBIFS
+rootfs_data (autoresize to ALL remaining UBI-available volume capacity).
+No artificial fixed trailing reserve. UBI still manages its necessary
+bad-block and wear-levelling reserves.
 
-Modern OpenIPC NAND layouts for selected XMedia SoCs mount a read-only
-UBIFS rootfs lower, and overlay a writable UBIFS rootfs_data upper/work.
-This is not necessarily SquashFS on NAND. NOR devices often use
-SquashFS+JFFS2. A SquashFS root on UBIBLOCK is a separate, sometimes
-retired OpenIPC NAND variant. Use the actual NAND precedent, not its
-NOR-specific sysupgrade offsets.
+Firmware owns the generic OverlayFS lower/upper contract. Builder owns
+NAND offsets and UBI capacity policy. Identity is NOT a third UBI volume;
+its physical format, read-only access/provider and provisioning must be
+validated separately, as it lies before the kernel MTD partition.
 
-## Proposed boot contract: source-only, not installed
+A safe early init must expose the rootfs lower at /rom, data UBIFS at
+/overlay, merged / via OverlayFS and identity at /identity once its
+provider is implemented. It must boot without silent formatting on
+data mount errors and never generate fake unique identity.
 
-    UBI volume rootfs       -> read-only UBIFS lower at /rom
-    UBI volume rootfs_data  -> read/write UBIFS at /overlay
-    /overlay/upper + /overlay/work -> merged OverlayFS at /
-    UBI volume identity     -> read-only UBIFS at /identity
-    /tmp                    -> tmpfs
+The current Capsula boots one writable UBIFS rootfs. The proposed
+partition scheme relocates kernel/DTB and needs real U-Boot validation.
+Neither init/pivot nor per-volume firmware updating is implemented;
+existing legacy image creation and all NAND write gates remain unchanged.
 
-The early init must execute before Alpine OpenRC starts. It must remount
-the rootfs lower read-only, mount/validate the data and identity volumes,
-create upper/work on the same filesystem, pivot_root into the merged root,
-and transfer /dev and /proc before exec of /sbin/init. Neither the early
-init nor bootloader parameters are installed by the current builder.
-The existing kernel boot root name remains ubi0:rootfs in the proposal,
-but a new init/pivot boot contract still needs physical acceptance.
-
-If rootfs_data cannot mount, do not wipe it. Only a separately validated
-recovery or volatile RAM overlay may be used, with explicit loss-of-
-persistence indication. If identity cannot mount, do not invent a serial.
-No automatic formatting, partition resizing, or writes on mount failure.
-
-## Firmware lifecycle and ownership
-
-Generic firmware supplies the root image, overlay init, packages and
-service policy. Builder defines volume geometry and device-specific
-mount/provisioning choices. The Application and optional diagnostics must
-not address raw NAND or choose volume IDs.
-
-Normal update: replace only the rootfs VOLUME, retain rootfs_data and
-identity. Clean install: reset rootfs_data, preserve identity. Factory
-reset: reset rootfs_data without replacing rootfs. No current updater
-implements any of these writes safely.
-
-A whole UBI image that recreates all volumes destroys persistent state.
-The existing single-UBIFS image builder remains legacy-only and the
-candidate multi-volume proposal is deliberately not installable.
-
-## Candidate rootfs audit
-
-builder.storage.audit_immutable_rootfs is a conservative read-only check
-for common host/network credentials and device-unique state. It blocks
-immutable lower-image packaging when known personalized files are found.
-It is not a comprehensive secrets scanner, and does not make the
-future storage design installable. Source and artifact acceptance differ.
+An autoresize data volume owns the free volume capacity after initial
+provisioning. A future larger rootfs cannot grow without safe data-volume
+migration/recreation. UBI reserves for wear and bad blocks are NOT free
+space that an updater may consume. See docs/STORAGE_LAYOUT.md.

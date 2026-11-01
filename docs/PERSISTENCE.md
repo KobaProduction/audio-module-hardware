@@ -84,10 +84,10 @@ This is SOURCE VALIDATION, not proof of operational persistence.
 ## Future storage split (not yet active)
 
 Builder/devices/capsula-mini-native/storage.json contains a planned
-three-volume UBIFS layout. System updates would replace only the
+physical identity-before-kernel and two-volume UBI layout. System updates would replace only the
 read-only rootfs volume; a persistent rootfs_data OverlayFS layer
-would keep user configuration, while an independent identity volume
-would survive clean install and factory reset. The existing device has
+would keep user configuration, while the protected physical identity MTD
+partition would survive clean install and factory reset. The existing device has
 none of these separate volumes; all current update/reset write paths
 remain blocked until a verified migration and recovery path exists.
 See docs/STORAGE_LAYOUT.md.
