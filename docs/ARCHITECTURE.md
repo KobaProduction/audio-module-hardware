@@ -102,3 +102,22 @@ model GPIO, display interfaces, gadget MAC addresses or NAND offsets.
 Original author source classification is documented in
 docs/AUTHOR_SOURCE_MAPPING.md; avoid importing binary executables or
 private factory backups into source Git.
+
+## HAL, diagnostics, updates: stable responsibility boundaries
+
+- kernel/platforms records SoC source and optional Linux Kconfig driver
+  features. Missing HAL capabilities must disable corresponding optional
+  drivers, not merely remove their user-space wrappers.
+- firmware/alpine supplies reusable packages and OpenRC services and stages
+  the HAL declaration. No Python runtime is added by HAL compilation.
+- builder/devices selects each hardware function explicitly, describes
+  true device wiring, and chooses packages, kernel driver modules and blobs.
+- hal/ is the shared language-neutral descriptor definition and build-host
+  validator. Runtime Linux providers are not yet implemented.
+- tools/diagnostics are optional consumers. The original ringled binary
+  must not be required; it may only be used as private behavior evidence.
+- firmware/updates contains a signed *offline compatibility checker*.
+  Update delivery/application/rollback are separate privileged future
+  services and remain disabled until physical recovery has been proven.
+
+See docs/HAL_CONTRACT.md and docs/UPDATES.md for explicit acceptance gates.

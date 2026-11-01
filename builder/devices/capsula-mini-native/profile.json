@@ -9,11 +9,11 @@
     "defconfig": "marusia_mini_defconfig",
     "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb",
     "runtime_firmware": {
-      "wifi": [
+      "network.wifi": [
         "aml/aml_wifi_rf_fn_link.txt",
         "aml/aml_wifi_rf.txt"
       ],
-      "audio": [
+      "audio.playback.speaker": [
         "eq_8918.bin"
       ]
     }
@@ -53,8 +53,19 @@
       "wifi",
       "bluetooth",
       "audio",
-      "time",
-      "diagnostics"
+      "time"
+    ]
+  },
+  "hal": {
+    "enabled_capabilities": [
+      "audio.capture.pdm",
+      "audio.playback.speaker",
+      "audio.playback.jack",
+      "display.front",
+      "input.touch",
+      "sensor.ambient",
+      "network.wifi",
+      "network.bluetooth"
     ]
   }
 }

@@ -16,6 +16,11 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
+from hal.manifest import CapabilityError, compile_manifest, write_manifest  # noqa: E402
+from builder.kernel_config import (  # noqa: E402
+    KernelConfigurationError, desired_symbols, write_config_overlay,
+    assert_options_match,
+)
 
 SOURCES = json.loads((ROOT / "firmware/alpine/sources.json").read_text(encoding="utf-8"))
 
@@ -94,6 +99,11 @@ def kernel_build(t: dict, work: Path, jobs: int) -> None:
     base = ["make", "-C", str(src), "O=" + str(output), "ARCH=arm64",
             "CROSS_COMPILE=aarch64-linux-gnu-"]
     checked(base + [t["kernel"]["defconfig"]])
+    config = output / ".config"
+    selected_options = desired_symbols(t)
+    write_config_overlay(config, selected_options)
+    checked(base + ["olddefconfig"])
+    assert_options_match(config, selected_options)
     checked(base + ["-j", str(jobs), "Image", "dtbs", "modules"])
     if not image.is_file() or image.stat().st_size < 1024 * 1024 or not dtb.is_file():
         raise BuildError("Kernel Image or target DTB missing")
@@ -176,6 +186,7 @@ def stage_rootfs(t: dict, work: Path, authorized_key: Path | None) -> None:
     checked([str(apk), "--root", str(rootfs), "--arch", t["architecture"],
              "--no-scripts", "--update-cache", "add", *apk_packages(t)])
     apply_overlay(t, rootfs, authorized_key)
+    print("HAL_DESCRIPTOR_STAGED", write_manifest(t, rootfs))
     print("ROOTFS_STAGED", rootfs)
 
 
@@ -224,9 +235,9 @@ def apply_overlay(t: dict, rootfs: Path, authorized_key: Path | None) -> None:
 
 
 def stage_driver_firmware(t: dict, kernel_source: Path, rootfs: Path) -> None:
-    enabled = set(t["firmware"]["components"])
-    for component, names in t["kernel"].get("runtime_firmware", {}).items():
-        if component not in enabled:
+    active_features = {cap["id"] for cap in compile_manifest(t)["capabilities"]}
+    for feature, names in t["kernel"].get("runtime_firmware", {}).items():
+        if feature not in active_features:
             continue
         for filename in names:
             if filename.startswith("/") or ".." in Path(filename).parts:
@@ -279,9 +290,16 @@ def pack_images(t: dict, work: Path) -> None:
 def package_manifest(t: dict, work: Path) -> None:
     artifacts = work / "images"
     files = [("Image","Image"), ("board.dtb","dtb"), ("rootfs.ubi","ubi")]
+    hal_descriptor = compile_manifest(t)
     output: dict = {"schema": 1, "target": t["id"], "status": "NOT_HARDWARE_VALIDATED",
                     "application_included": False, "bootloader": "retain-vendor",
-                    "kernel_revision": t["kernel"]["revision"], "artifacts": {}}
+                    "kernel_revision": t["kernel"]["revision"],
+                    "hal_abi_major": hal_descriptor["version"],
+                    "capabilities_declared": [
+                        c["id"] for c in hal_descriptor["capabilities"]
+                    ],
+                    "runtime_hal_verified": False,
+                    "artifacts": {}}
     for filename, slot in files:
         f = artifacts / filename
         if not f.is_file() or not artifact_fits(t, slot, f.stat().st_size):
@@ -308,9 +326,12 @@ def package_manifest(t: dict, work: Path) -> None:
 
 def plan(t: dict, work: Path) -> None:
     packages = apk_packages(t)
+    descriptor = compile_manifest(t)
     summary = {"id": t["id"], "soc": t["soc"], "kernel_sha": t["kernel"]["revision"],
                "alpine": t["os"]["release"], "packages": len(packages),
                "components": t["firmware"]["components"],
+               "hal_abi": descriptor["version"],
+               "capabilities_declared": len(descriptor["capabilities"]),
                "protected_nand": [0, t["nand"]["protected_until"]],
                "rootfs": "Alpine minirootfs + signed APK packages + overlay",
                "application_included": False, "bootloader_rebuild": False,
@@ -349,7 +370,8 @@ def main() -> int:
             stage_rootfs(t, work, args.authorized_key_file)
             pack_images(t, work)
         return 0
-    except (BuildError, ProfileError, OSError, subprocess.CalledProcessError,
+    except (BuildError, ProfileError, CapabilityError, KernelConfigurationError,
+            OSError, subprocess.CalledProcessError,
             ValueError, KeyError) as exc:
         print("BUILD_FAILED:", exc, file=sys.stderr)
         return 2

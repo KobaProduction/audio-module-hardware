@@ -10,11 +10,12 @@ and flasher projects without changing target contracts.
 
 ## Source layout
 
-- kernel/ — pinned SoC Linux sources and a 246-path author driver/provenance catalog
+- kernel/ — pinned SoC Linux sources, optional Kconfig driver selection and a 246-path author driver/provenance catalog
 - uboot/ — explicit bootloader policy (retain vendor on current board)
 - firmware/alpine/ — common Alpine source pins, optional component packages/services, reusable OpenRC configuration
-- builder/ — build engine; devices/ holds each physical model's profile and overlay
-- tools/ — transport, flashing, backup and recovery contracts
+- builder/ — build engine; devices/ owns the model profile, capability selection and overlay
+- hal/ — common versioned capability contract compiled to device metadata (build-host only)
+- tools/ — transport, flashing, backup and recovery; optional HAL-based diagnostics
 - builder/build.py — source-based kernel/rootfs/UBI image build driver
 - docs/ARCHITECTURE.md — boundaries, provenance and future repository split
 
@@ -60,6 +61,33 @@ For source-only checks run:
 Enable pre-push hook on a new checkout:
 
     git config core.hooksPath .githooks
+
+## HAL and safe update architecture
+
+A device must **explicitly select** its supported HAL functions. The
+builder exports a declarative, versioned descriptor to
+/usr/share/audio-module/capabilities-v1.json inside the staged rootfs.
+It is a declaration, NOT live hardware detection.
+
+The HAL contract covers microphones, capture channels, speaker topology,
+jack/AUX/SPDIF outputs, capacitive/physical inputs, segmented/pixel
+displays, RGB LEDs, ambient sensors, Wi-Fi and Bluetooth. Unknown physical
+counts are null rather than guesses. Any missing or unimplemented feature
+is not advertised; the original ringled ELF is not a runtime dependency.
+
+Generic HAL producers should use standard Linux ALSA, evdev, IIO,
+line-display/LED class, DRM and iwd/BlueZ interfaces. Tools diagnostics
+are opt-in clients of that contract. Builder also generates a conditional
+Kconfig overlay for optional SoC drivers to keep the kernel image minimal.
+This still requires a full kernel build and hardware compatibility test.
+
+The independent firmware updater is NOT installed. An offline reference
+checker validates an Ed25519-signed update manifest for target/SoC,
+version, HAL ABI, kernel revision and partition sizes, without downloading
+firmware or writing NAND. OpenIPC sysupgrade is inspiration, not a
+drop-in tool for our different NAND/UBI layout.
+
+See docs/HAL_CONTRACT.md and docs/UPDATES.md.
 
 ## Licensing and attribution
 

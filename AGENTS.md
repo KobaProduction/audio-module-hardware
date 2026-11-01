@@ -1,6 +1,9 @@
 # AGENTS.md
 
 Read README.md, then docs/ARCHITECTURE.md completely before work.
+For HAL capability/backend work read docs/HAL_CONTRACT.md and hal/README.md.
+For OTA/version-check/update work read docs/UPDATES.md.
+For target changes read builder/README.md and the selected device profile.
 
 Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
 U-Boot policy, source-based Alpine image creation, builder-owned device profiles, and
