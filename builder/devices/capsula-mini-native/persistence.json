@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "device": "capsula-mini-native",
+  "current_storage": {
+    "ubi_mtd": "ubi",
+    "rootfs_volume": "rootfs",
+    "rootfs_volume_lebs": 1652,
+    "available_ubi_lebs": 0,
+    "rootfs_writable": true,
+    "independent_data_volume": false,
+    "evidence": "read-only /proc/mtd and ubinfo -a on running Capsula Mini, 2026-11-01"
+  },
+  "factory": {
+    "protected_before_offset": 18874368,
+    "protected_mtd_names": ["bootloader", "reserved", "tpl", "misc"],
+    "unique_serial_storage_verified": false
+  },
+  "identity": {
+    "preserve_on_clean_install": true,
+    "paths": ["/etc/machine-id", "/etc/ssh/ssh_host_*", "/etc/conf.d/usbgadget", "/var/lib/audio-module/identity"]
+  },
+  "user_settings": {
+    "preserve_on_system_update": true,
+    "reset_on_clean_install": true,
+    "paths": ["/etc/iwd", "/var/lib/iwd", "/var/lib/bluetooth", "/root/.ssh", "/etc/audio-module", "/var/lib/audio-module/settings", "/etc/network/interfaces", "/etc/hostname"]
+  },
+  "update_capability": {
+    "whole_ubi_replacement_preserves_rootfs_state": false,
+    "external_backup_restore_implemented": false,
+    "hardware_rollback_validated": false,
+    "safe_apply_enabled": false
+  }
+}

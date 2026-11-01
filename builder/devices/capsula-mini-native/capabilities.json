@@ -108,22 +108,6 @@
       }
     },
     {
-      "id": "light.ring",
-      "kind": "light.addressable",
-      "component": "base",
-      "support": "planned",
-      "provider": "unresolved",
-      "actions": [
-        "brightness",
-        "color",
-        "pattern"
-      ],
-      "properties": {
-        "pixels": null,
-        "note": "Original ringled program is a stripped ARM64 ELF, not an approved HAL backend"
-      }
-    },
-    {
       "id": "network.wifi",
       "kind": "network.wifi",
       "component": "wifi",

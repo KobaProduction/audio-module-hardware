@@ -32,7 +32,7 @@ Each device supplies a capabilities.json declaration of its hardware
 functions and a profile.hal.enabled_capabilities whitelist. Builder
 intersects the whitelist with its selected firmware.components.
 Disabled functions are not exposed to Application. Planned functions
-such as the Capsula Mini addressable ring are never advertised.
+are never advertised. Ring LED is deliberately absent from the Capsula Mini profile.
 
 Kernel platform metadata maps known optional feature IDs to Kconfig
 driver symbols. Builder writes a generated .config override and runs

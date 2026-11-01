@@ -69,6 +69,27 @@ class SignedUpdateTests(unittest.TestCase):
         self.assertFalse(result["artifact_digests_checked"])
         self.assertFalse(result["may_flash"])
 
+    def test_signed_update_never_implies_settings_are_safe_to_overwrite(self) -> None:
+        result = self.signed_check()
+        retain = result["persistence"]
+        self.assertEqual(retain["mode"], "system-update")
+        self.assertTrue(retain["preserve_device_identity"])
+        self.assertTrue(retain["preserve_user_settings"])
+        self.assertFalse(retain["can_apply"])
+        self.assertIn("unimplemented-verified-off-device-backup-restore", retain["blockers"])
+
+    def test_clean_install_preserves_identity_not_user_settings(self) -> None:
+        self.signed_check()
+        result = check_release(
+            self.target, "1.0.0", self.manifest, self.signature,
+            self.public, mode="clean-install",
+        )
+        preserve = result["persistence"]
+        self.assertTrue(preserve["preserve_device_identity"])
+        self.assertFalse(preserve["preserve_user_settings"])
+        self.assertTrue(preserve["reset_user_settings"])
+        self.assertFalse(result["may_flash"])
+
     def test_same_version_is_current(self) -> None:
         self.assertEqual(
             self.signed_check(current_version="1.0.1")["status"], "up-to-date",

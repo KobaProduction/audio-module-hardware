@@ -15,13 +15,16 @@ compatible with our Capsula Mini NAND/UBIFS boot layout.
    are NOT a publisher authenticity check.
 3. **Inspect:** reject incompatible SoC/board, kernel, HAL ABI, downgrade,
    missing artifacts, oversized partitions, or unapproved releases.
-4. **Stage:** download complete firmware images into isolated storage, check
+4. **Preservation:** choose system-update vs clean-install and verify an
+   off-device backup of identity/settings for current writable rootfs.
+   See PERSISTENCE.md.
+5. **Stage:** download complete firmware images into isolated storage, check
    their hashes, storage capacity and free space, never overwrite live
    bootloader/keys/BBT/calibration.
-5. **Apply/rollback:** MUST remain disabled on the A113X first target until
+6. **Apply/rollback:** MUST remain disabled on the A113X first target until
    power-loss handling, UBI bad-block ECC, independent recovery/rollback,
    boot health and settings persistence are hardware-validated.
-6. **Post-boot:** report health and firmware versions to the Application
+7. **Post-boot:** report health and firmware versions to the Application
    and centralized service. No automatic update without explicit policy.
 
 ## What is actually implemented now
@@ -31,6 +34,15 @@ it requires a detached Ed25519 signature, trusted PEM public key, target
 profile and installed version; validates compatibility, manifest fields
 and NAND partition sizes; never fetches artifacts, never writes NAND.
 The project does not store signing private keys or user-specific secrets.
+
+The offline checker now accepts --mode system-update (default) and
+--mode clean-install, always returns a persistence plan, and never enables
+NAND writes. factory-reset is a separate planned settings-only operation.
+The physical Capsula Mini has one writable 200 MiB rootfs UBI volume,
+zero available LEBs, and no independent configuration volume. An actual
+update must protect unique identity and preserve user preferences through
+a verified external backup and restore. NO such installer exists today.
+See PERSISTENCE.md.
 
 An example signed release JSON has these fields:
 

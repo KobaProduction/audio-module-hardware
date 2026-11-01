@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(git rev-parse --show-toplevel)"
-for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md docs/HAL_CONTRACT.md docs/UPDATES.md builder/build.py builder/profile.py builder/kernel_config.py builder/devices/capsula-mini-native/profile.json builder/devices/capsula-mini-native/capabilities.json kernel/platforms/amlogic-a113x.json hal/manifest.py hal/probe.py firmware/updates/check.py; do
+for f in README.md AGENTS.md .gitignore .gitattributes .githooks/pre-push scripts/verify.sh .github/workflows/verify.yml docs/ARCHITECTURE.md docs/HAL_CONTRACT.md docs/UPDATES.md docs/PERSISTENCE.md builder/build.py builder/profile.py builder/kernel_config.py builder/devices/capsula-mini-native/profile.json builder/devices/capsula-mini-native/capabilities.json builder/devices/capsula-mini-native/persistence.json kernel/platforms/amlogic-a113x.json hal/manifest.py hal/probe.py firmware/updates/check.py firmware/updates/persistence.py; do
     test -s "$f" || { echo "Missing expected bootstrap: $f" >&2; exit 1; }
 done
 empty_tree="$(git hash-object -t tree /dev/null)"
