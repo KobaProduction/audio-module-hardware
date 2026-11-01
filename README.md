@@ -48,6 +48,9 @@ Commands from the repository root:
 
 The rootfs stage is intentionally one-shot: it refuses to overwrite an
 existing rootfs directory, which may contain an SSH provisioning key.
+Builder also stores an offline input attestation and resolved Alpine package
+versions when staging rootfs; the image phase rejects changed inputs. Alpine
+repository package versions are still not locked (see builder/README.md).
 The user-supplied path is to a PUBLIC key only, never a private key.
 Images stay under .work/capsula-mini-native/images/ and are untracked.
 

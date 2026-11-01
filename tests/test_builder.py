@@ -185,6 +185,11 @@ class BuildTests(unittest.TestCase):
 
     def test_manifest_from_synthetic_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as td:
+            rootfs = Path(td) / "rootfs"
+            package_db = rootfs / "lib/apk/db/installed"
+            package_db.parent.mkdir(parents=True)
+            package_db.write_text("P:busybox\nV:1.37.0-r1\n\nP:alpine-base\nV:3.24.0-r0\n")
+            build.capture_stage(self.profile, Path(td), rootfs)
             images = Path(td) / "images"
             images.mkdir()
             (images / "Image").write_bytes(b"\0" * 56 + b"ARM\x64" + b"\0" * 8)
@@ -193,6 +198,8 @@ class BuildTests(unittest.TestCase):
             build.package_manifest(self.profile, Path(td))
             data = json.loads((images / "manifest.json").read_text())
             self.assertEqual(data["status"], "NOT_HARDWARE_VALIDATED")
+            self.assertFalse(data["build_input_attestation"]["alpine_package_versions_locked"])
+            self.assertEqual(len(data["build_input_attestation"]["resolved_packages"]), 2)
             self.assertFalse(data["application_included"])
             self.assertFalse(data["runtime_hal_verified"])
             self.assertFalse(data["update_persistence"]["system_update"]["can_apply"])
