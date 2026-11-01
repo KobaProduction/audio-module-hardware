@@ -1,0 +1,20 @@
+Subject: [PATCH] arm64: dts: amlogic: name Capsula Mini board files accurately
+
+Keep the original upstream board configuration byte-for-byte. Only change
+its DTS/defconfig filenames and the Amlogic DTS Makefile target.
+
+---
+diff --git a/arch/arm64/boot/dts/amlogic/Makefile b/arch/arm64/boot/dts/amlogic/Makefile
+--- a/arch/arm64/boot/dts/amlogic/Makefile
++++ b/arch/arm64/boot/dts/amlogic/Makefile
+@@ -17 +17 @@
+-dtb-$(CONFIG_ARCH_MESON) += meson-axg-s420-marusia-mini.dtb
++dtb-$(CONFIG_ARCH_MESON) += meson-axg-capsula-mini.dtb
+diff --git a/arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts b/arch/arm64/boot/dts/amlogic/meson-axg-capsula-mini.dts
+similarity index 100%
+rename from arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts
+rename to arch/arm64/boot/dts/amlogic/meson-axg-capsula-mini.dts
+diff --git a/arch/arm64/configs/marusia_mini_defconfig b/arch/arm64/configs/capsula_mini_defconfig
+similarity index 100%
+rename from arch/arm64/configs/marusia_mini_defconfig
+rename to arch/arm64/configs/capsula_mini_defconfig

@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 from builder.profile import ProfileError, artifact_fits, load_target  # noqa: E402
 from builder.kernel_source import (  # noqa: E402
     KernelSourceError, extract_archive, verify_archive_tree,
+    ensure_archive_patches, mark_patched_source, STAMP,
 )
 from builder.input_attestation import (  # noqa: E402
     InputAttestationError, build_inputs, capture_stage, verify_stage,
@@ -80,15 +81,21 @@ def fetch_kernel(t: dict, work: Path) -> Path:
     src = work / "kernel-src"
     expected = t["kernel"]["revision"]
     archive_sha = t["kernel"].get("archive_sha256")
+    patches = t["kernel"].get("patches", [])
     if src.exists():
         if (src / ".git").is_dir():
             actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=src, text=True).strip()
             if actual != expected:
                 raise BuildError("Existing kernel checkout has wrong commit")
-            if subprocess.check_output(["git", "status", "--porcelain"], cwd=src):
-                raise BuildError("Kernel checkout has local modifications")
+            if (src / STAMP).is_file():
+                ensure_archive_patches(src, expected, archive_sha or "", patches)
+            else:
+                if subprocess.check_output(["git", "status", "--porcelain"], cwd=src):
+                    raise BuildError("Kernel checkout has local modifications")
+                if patches:
+                    mark_patched_source(src, expected, archive_sha or "", patches)
         elif archive_sha:
-            verify_archive_tree(src, expected, archive_sha)
+            ensure_archive_patches(src, expected, archive_sha, patches)
         else:
             raise BuildError("Existing kernel source has no verified Git checkout")
         return src
@@ -98,7 +105,7 @@ def fetch_kernel(t: dict, work: Path) -> Path:
         entry = {"url": f"https://codeload.github.com/{repo}/tar.gz/{expected}",
                  "sha256": archive_sha}
         cached = verified_fetch(entry, work / "downloads" / ("kernel-" + expected + ".tar.gz"))
-        return extract_archive(cached, src, expected, archive_sha, repo)
+        return extract_archive(cached, src, expected, archive_sha, repo, patches)
     # Other SoCs without an archive pin keep the normal Git provider.
     checked(["git", "init", "-q", str(src)])
     checked(["git", "remote", "add", "origin", t["kernel"]["source"]], cwd=src)
@@ -109,6 +116,8 @@ def fetch_kernel(t: dict, work: Path) -> Path:
     actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=src, text=True).strip()
     if actual != expected:
         raise BuildError("Kernel git revision mismatch")
+    if patches:
+        mark_patched_source(src, expected, archive_sha or "", patches)
     return src
 
 

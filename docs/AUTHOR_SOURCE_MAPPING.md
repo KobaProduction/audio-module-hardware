@@ -28,7 +28,7 @@ is in kernel/provenance/comp18man-a113x-delta.json.
 | W1 Wi-Fi chipset and RF tables | drivers/net/wireless/amlogic/w1/ | Kernel, selected by Builder modules; closed parts reviewed separately |
 | Bluetooth HCI | drivers/bluetooth/hci_aml.c | Kernel, selected by Builder config |
 | NAND/UBI adjustments | drivers/mtd/nand/raw/ | Kernel; NAND geometry in Builder |
-| Capsula Mini physical wiring | arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts | DTS source in Kernel; selection in Builder |
+| Capsula Mini physical wiring | Upstream: `arch/arm64/boot/dts/amlogic/meson-axg-s420-marusia-mini.dts`; built from the source-patched `meson-axg-capsula-mini.dts` | DTS source/patch in Kernel; selection in Builder |
 
 Kernel source remains an immutable Git dependency, not a source-less image
 or an independent duplicate of all 2+ GiB of Linux. Git history retains

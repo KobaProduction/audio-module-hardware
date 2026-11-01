@@ -6,8 +6,8 @@
   "soc": "amlogic-a113x",
   "architecture": "aarch64",
   "kernel": {
-    "defconfig": "marusia_mini_defconfig",
-    "dtb": "amlogic/meson-axg-s420-marusia-mini.dtb",
+    "defconfig": "capsula_mini_defconfig",
+    "dtb": "amlogic/meson-axg-capsula-mini.dtb",
     "runtime_firmware": {
       "network.wifi": [
         "aml/aml_wifi_rf_fn_link.txt",
