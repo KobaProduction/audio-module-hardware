@@ -1,0 +1,21 @@
+# Private device data and credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.ppk
+backups/
+backup/
+device-dumps/
+*.raw.bin
+
+# Local generated state
+.venv/
+__pycache__/
+.cache/
+build/
+dist/
+.tmp/
+.DS_Store
+Thumbs.db
