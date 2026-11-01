@@ -89,8 +89,10 @@ working Alpine 3.24.1 image.
 The real OpenIPC Builder stores device definitions in its own devices/
 subtree, and overlays a common firmware repository during assembly. We
 follow the same ownership inside this initially combined repository:
-firmware and kernel components never reference concrete consumer models;
-the Builder alone resolves a selected device and applies its differences.
+Firmware contains reusable packages/services rather than consumer-model
+logic. Kernel may carry source-controlled board DTS/defconfig patches when
+needed; **Builder alone owns concrete device profiles**, selects the DTS,
+enables hardware features, and applies board-specific overlays.
 
 Before adding another device, reuse the same SoC platform pin when possible.
 Do not copy kernel source commits or Alpine rootfs recipes between device

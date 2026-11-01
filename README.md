@@ -151,10 +151,12 @@ The entire kernel source is fetched by immutable revision rather than
 copied into consumer device profiles.
 
 The original vendor userspace diagnostics and helper binaries are still
-being classified. Hardware-specific clock/display/LED/touch test wrappers
-belong to Builder, generic Wi-Fi provisioning belongs to Firmware, generic
-USB/NAND transport belongs to Tools. Unlicensed executables and personal
-NAND backups are not redistributed.
+being classified. Optional hardware diagnostics belong to Tools; physical
+board wiring and capability selection belong to Builder. Runtime display,
+input and audio behavior belongs to Application through the agreed HAL
+boundary. Generic Wi-Fi provisioning belongs to Firmware, while USB/NAND
+transport belongs to Tools. Unlicensed executables and personal NAND backups
+are not redistributed.
 
 For a file-by-file audit of the original author's kernel drivers,
 userland helpers and unavailable binary sources, see
