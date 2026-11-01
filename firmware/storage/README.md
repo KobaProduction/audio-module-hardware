@@ -1,29 +1,25 @@
-# Generic filesystem composition and device-owned partitioning
+# OpenWrt-inspired rootfs/OverlayFS contract
 
-Future Audio Module: protected boot chain -> identity MTD partition ->
-kernel and DTB -> terminal UBI partition.
+Preserve the current factory physical NAND partition map, including
+the protected bootloader/reserved/TPL/misc regions and their actual
+U-Boot Environment, factory calibration and keys.
 
-Inside UBI: immutable UBIFS rootfs (image-sized) and writable UBIFS
-rootfs_data (autoresize to ALL remaining UBI-available volume capacity).
-No artificial fixed trailing reserve. UBI still manages its necessary
-bad-block and wear-levelling reserves.
+Within the final UBI MTD: use two logical volumes:
+- immutable UBIFS rootfs, image-sized, lower /rom;
+- persistent UBIFS rootfs_data, autoresize to remaining available UBI
+  volume space, upper/work for the merged OverlayFS /.
 
-Firmware owns the generic OverlayFS lower/upper contract. Builder owns
-NAND offsets and UBI capacity policy. Identity is NOT a third UBI volume;
-its physical format, read-only access/provider and provisioning must be
-validated separately, as it lies before the kernel MTD partition.
+U-Boot Environment and factory source are not a third data volume.
+Expose identifiers through a future read-only restricted identity API.
+The live redundant env copies have conflicting ethaddr values; never
+write them or select an unverified MAC automatically.
 
-A safe early init must expose the rootfs lower at /rom, data UBIFS at
-/overlay, merged / via OverlayFS and identity at /identity once its
-provider is implemented. It must boot without silent formatting on
-data mount errors and never generate fake unique identity.
+OpenWrt sysupgrade normally saves selected config state, not
+necessarily every overlay file; a larger system image may require
+rebuilding the data volume. Rootfs Data consuming available UBI
+capacity does not eliminate the need for verified external backup.
+UBI reserves for NAND bad blocks remain mandatory.
 
-The current Capsula boots one writable UBIFS rootfs. The proposed
-partition scheme relocates kernel/DTB and needs real U-Boot validation.
-Neither init/pivot nor per-volume firmware updating is implemented;
-existing legacy image creation and all NAND write gates remain unchanged.
-
-An autoresize data volume owns the free volume capacity after initial
-provisioning. A future larger rootfs cannot grow without safe data-volume
-migration/recreation. UBI reserves for wear and bad blocks are NOT free
-space that an updater may consume. See docs/STORAGE_LAYOUT.md.
+No early-init migration, OverlayFS boot, full source image,
+sysupgrade port or NAND write operation is approved yet. Keep
+legacy Alpine rootfs active until full hardware acceptance.

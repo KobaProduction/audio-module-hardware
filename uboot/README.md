@@ -22,3 +22,7 @@ local restricted backups. Do not publish or overwrite device-specific
 copies, calibration data, BBT or keys. Reconstruct the boot chain from
 source only after identifying upstream U-Boot/SPL support and confirming a
 hardware recovery path. No bootloader replacement target is implemented.
+
+## Verified U-Boot environment and factory identity
+
+Read IDENTITY.md. Reserved NAND has CRC-valid env copies containing serial/ethaddr, but the ethaddr copies disagree. No new identity MTD is required and no U-Boot Environment writes are allowed.

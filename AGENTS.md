@@ -3,7 +3,7 @@
 Read README.md, then docs/ARCHITECTURE.md completely before work.
 For HAL capability/backend work read docs/HAL_CONTRACT.md and hal/README.md.
 For OTA/version-check/update work read docs/UPDATES.md and docs/PERSISTENCE.md.
-For filesystem/image layout work read docs/STORAGE_LAYOUT.md, firmware/storage/README.md and the selected Builder storage.json.
+For filesystem/image layout work read docs/STORAGE_LAYOUT.md, docs/OPENWRT_MIGRATION.md, firmware/storage/README.md and the selected Builder storage.json.
 For target changes read builder/README.md and the selected device profile.
 
 Project: Koba Audio Module — Hardware. Own reusable SoC/kernel enablement,
@@ -31,3 +31,5 @@ rootfs. Never claim identity/settings survive a complete UBI overwrite;
 enforce off-device verified backup/restore and hardware recovery first.
 
 The OverlayFS multi-volume proposal is DESIGN ONLY: do not reformat the working UBI rootfs, install a new init, or assume SquashFS boot compatibility without hardware acceptance.
+
+Existing protected reserved NAND holds U-Boot Environment with conflicting ethaddr copies. Do not choose or write ethaddr automatically, disclose values, or add a new Identity partition without evidence.

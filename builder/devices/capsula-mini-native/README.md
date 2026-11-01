@@ -23,6 +23,6 @@ See docs/AUTHOR_SOURCE_MAPPING.md.
 ## Candidate immutable root + user overlay
 
 storage.json is an uninstalled capacity-checked proposal: rootfs (UBIFS
-read-only), rootfs_data (UBIFS writable OverlayFS), identity (physical protected MTD before kernel), with rootfs_data autoresized to all remaining UBI space. The currently running
+read-only), rootfs_data (UBIFS writable OverlayFS), identity (existing protected U-Boot Environment in reserved NAND), with rootfs_data autoresized to all remaining UBI space. The currently running
 Capsula has only one writable 200 MiB rootfs and no dedicated overlay.
 Do not treat the candidate as a tested production partition map.

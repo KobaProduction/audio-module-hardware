@@ -25,21 +25,27 @@ class StorageTests(unittest.TestCase):
 
     def test_physical_order_and_contiguity(self):
         p = plan_storage(self.target).physical_partitions
-        self.assertEqual([x.name for x in p], ["bootloader","reserved","tpl","misc","identity","kernel","dtb","ubi"])
+        self.assertEqual([x.name for x in p], ["bootloader","reserved","tpl","misc","kernel","dtb","ubi"])
         self.assertEqual(p[0].offset_bytes, 0)
         self.assertEqual(p[-1].offset_bytes+p[-1].size_bytes, self.target["nand"]["total_bytes"])
-        self.assertEqual(p[-1].size_bytes, 210*1024*1024)
+        self.assertEqual(p[-1].size_bytes, 212*1024*1024)
         for a,b in zip(p,p[1:]):
             self.assertEqual(a.offset_bytes+a.size_bytes,b.offset_bytes)
 
-    def test_identity_between_boot_and_kernel(self):
+    def test_protected_vendor_reserved_already_contains_identity(self):
         p = plan_storage(self.target)
-        self.assertTrue(all(x.preserve_always for x in p.physical_partitions[:5]))
+        self.assertTrue(all(x.preserve_always for x in p.physical_partitions[:4]))
+        self.assertEqual(p.physical_partitions[1].name,"reserved")
         self.assertEqual(p.physical_partitions[4].offset_bytes,18*1024*1024)
-        self.assertEqual(p.physical_partitions[5].offset_bytes,20*1024*1024)
-        self.assertEqual(p.physical_partitions[6].offset_bytes,45*1024*1024)
-        self.assertEqual(p.identity_storage_format,"unselected")
-        self.assertEqual([x.name for x in p.ubi_volumes],["rootfs","rootfs_data"])
+        self.assertEqual(p.physical_partitions[5].offset_bytes,43*1024*1024)
+        self.assertEqual(p.physical_partitions[6].offset_bytes,44*1024*1024)
+        self.assertEqual(p.identity_source,"existing-protected-uboot-env-with-mac-copy-conflict")
+        self.assertNotIn("identity",[x.name for x in p.physical_partitions])
+        self.assertNotIn("identity",[x.name for x in p.ubi_volumes])
+        identity = self.doc["candidate"]["identity_source"]
+        self.assertFalse(identity["allow_uboot_environment_writes"])
+        self.assertFalse(identity["active_copy_selected_by_bootloader_verified"])
+        self.assertTrue(identity["ethaddr_copy_values_disagree"])
 
     def test_data_autoresizes_without_fixed_tail_reserve(self):
         p = plan_storage(self.target)
@@ -49,7 +55,7 @@ class StorageTests(unittest.TestCase):
         self.assertIsNone(p.ubi_volumes[1].max_lebs)
         self.assertIsNone(p.rootfs_data_exact_lebs)
         self.assertEqual(p.fixed_unused_tail_lebs,0)
-        self.assertEqual(p.nominal_ubi_pebs,1680)
+        self.assertEqual(p.nominal_ubi_pebs,1696)
         self.assertTrue(p.ubi_volumes[1].preserve_on_update)
         self.assertFalse(p.ubi_volumes[1].preserve_on_clean)
 
@@ -58,8 +64,8 @@ class StorageTests(unittest.TestCase):
             lambda d: d["candidate"]["physical_partitions"].reverse(),
             lambda d: d["candidate"]["physical_partitions"][4].update(offset=0),
             lambda d: d["candidate"]["physical_partitions"][4].update(bytes=131071),
-            lambda d: d["candidate"]["physical_partitions"][4].update(format="ubifs"),
-            lambda d: d["candidate"]["physical_partitions"][4].update(preserve_always=False),
+            lambda d: d["candidate"]["identity_source"].update(allow_uboot_environment_writes=True),
+            lambda d: d["candidate"]["physical_partitions"][1].update(preserve_always=False),
             lambda d: d["candidate"]["physical_partitions"][-1].update(bytes=1024),
         ]
         for mutate in mutations:
@@ -81,9 +87,9 @@ class StorageTests(unittest.TestCase):
                 plan_storage(self.target,document=d)
 
     def test_fail_closed_on_unverified_activation_and_squashfs(self):
-        for field in ("bootloader_relocation_verified","kernel_dtb_offsets_verified",
-                      "early_init_implemented","identity_format_provisioning_implemented",
-                      "volume_migration_implemented","recovery_validated"):
+        for field in ("factory_identity_source_validated_for_runtime",
+                      "early_init_implemented", "volume_migration_implemented",
+                      "recovery_validated"):
             d=deepcopy(self.doc)
             d["candidate"][field]=True
             with self.assertRaises(StoragePlanError):
@@ -102,7 +108,7 @@ class StorageTests(unittest.TestCase):
                              "capsula-mini-native"],capture_output=True,text=True,check=True,timeout=10)
         d=json.loads(proc.stdout)
         self.assertFalse(d["may_install"])
-        self.assertEqual(d["physical_partitions"][4]["name"],"identity")
+        self.assertEqual(d["physical_partitions"][1]["name"],"reserved")
         self.assertEqual(d["ubi_volumes"][1]["allocation"],"autoresize-remainder")
 
     def test_read_only_secret_inventory(self):
